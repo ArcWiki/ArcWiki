@@ -1,0 +1,36 @@
+{{define "navbar"}}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="border-bottom-color: #6a89a5;
+border-width: medium medium 5px;
+border-style: none none solid;">
+  
+    <a class="navbar-brand" href="#">
+      <img src="/images/arcwiki.svg" alt="" width="30" height="24">
+      ArcWiki
+    </a>
+  
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+      <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="/">Home</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/title/Special:AllPages">All Pages</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/title/Special:Categories">All Categories</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Help</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">About</a>
+      </li>
+    </ul>
+    
+  </div>
+
+</nav>
+  {{end}}

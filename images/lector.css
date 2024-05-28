@@ -1,0 +1,348 @@
+/*
+ *   Copyright (c) 2024 Edward Stock
+
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.custom-navbar {
+
+  height: 65px;
+  padding: 10px 15px;
+  background-color: rgb(51, 51, 51);
+  border-bottom-color: #6a89a5;
+  border-width: medium medium 5px;
+  border-style: none none solid;
+}
+
+.custom-navbar .nav-item {
+  margin-right: 20px;
+  /* adjust spacing as needed */
+}
+
+nav .navbar-nav li a {
+  color: white !important;
+  font-weight: 700;
+}
+
+.navbar-logo {
+  font-size: x-large;
+  color: white;
+  text-decoration: none !important;
+
+
+}
+
+.navbar-logo:hover {
+  font-size: x-large;
+  color: white;
+  text-decoration: none !important;
+
+
+}
+
+
+/* a {
+
+      text-decoration: none;
+      color: #0077bb;
+
+    } */
+
+.menu {
+  padding-left: 1rem !important;
+  width: fit-content;
+  font: normal normal normal x-small/normal sans-serif;
+
+}
+
+.menu ul {
+
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  margin-bottom: auto;
+  list-style-type: square;
+  line-height: 1.5em;
+  font-size: 14px;
+}
+
+.menu a {
+  text-decoration: none !important;
+}
+
+.menu a:hover {
+  text-decoration: underline !important;
+}
+
+.toc {
+  width: 252.633px;
+  background-color: #f9faff;
+  border: 1px solid #d7dfe3;
+  margin: 1.5rem 0;
+
+
+}
+
+.toc ul {
+  display: inline-block;
+  text-align: left;
+  list-style: none;
+  margin: 0.3em 0;
+  padding-left: 7px;
+  padding-bottom: 3px;
+
+  line-height: 1.6;
+}
+
+
+.toc li {
+  margin: 0;
+
+}
+
+.toc ul ul {
+  padding-left: 25px;
+}
+
+.toc ul li {
+  line-height: 18px;
+  /* Increase space between lines */
+}
+
+.toc a {
+  text-decoration: none !important;
+}
+
+.toc a:hover {
+  text-decoration: underline !important;
+}
+
+.wikih1 {
+  color: #222222;
+  background: none;
+  overflow: hidden;
+  page-break-after: avoid;
+  font-size: 1.8em;
+  font-family: sans-serif;
+  margin-top: 1em;
+  margin-bottom: 0.25em;
+  line-height: 1.3;
+  padding: 0;
+  border-bottom: 1px solid #AAAAAA;
+}
+
+.wikih2 {
+  color: #222222;
+  background: none;
+  overflow: hidden;
+  page-break-after: avoid;
+  font-size: 1.5em;
+  font-family: sans-serif;
+  margin-top: 1em;
+  margin-bottom: 0.25em;
+  line-height: 1.3;
+  padding: 0;
+  border-bottom: 1px solid #AAAAAA;
+}
+
+.wikih3 {
+  color: #222222;
+  background: none;
+  overflow: hidden;
+  page-break-after: avoid;
+  font-size: 1.17em;
+  font-family: sans-serif;
+  font-weight: bold;
+  margin-top: 0.3em;
+  margin-bottom: 0;
+  line-height: 1.6;
+  padding-top: 0.5em;
+  padding-bottom: 0;
+}
+
+.wikih4 {
+  color: #222222;
+  background: none;
+  overflow: hidden;
+  page-break-after: avoid;
+  font-size: 100%;
+  font-family: sans-serif;
+  font-weight: bold;
+  margin-top: 0.3em;
+  margin-bottom: 0;
+  line-height: 1.6;
+  padding-top: 0.5em;
+  padding-bottom: 0;
+}
+
+.wikih5 {
+  color: #222222;
+  background: none;
+  overflow: hidden;
+  page-break-after: avoid;
+  font-size: 100%;
+  font-family: sans-serif;
+  font-weight: bold;
+  margin-top: 0.3em;
+  margin-bottom: 0;
+  line-height: 1.6;
+  padding-top: 0.5em;
+  padding-bottom: 0;
+}
+
+.wikih6 {
+  color: #222222;
+  background: none;
+  overflow: hidden;
+  page-break-after: avoid;
+  font-size: 100%;
+  font-family: sans-serif;
+  font-weight: bold;
+  margin-top: 0.3em;
+  margin-bottom: 0;
+  line-height: 1.6;
+  padding-top: 0.5em;
+  padding-bottom: 0;
+}
+
+.wikiborder {
+  border-color: #cccccc;
+  /* Your desired hex code */
+}
+
+.border-1 {
+  border: 1px solid #cccccc;
+  background-color: #ffffff;
+
+}
+
+.container-xxl {
+  max-width: 1492px !important;
+
+
+}
+
+/* .container-fluid {
+      width: 102% !important;
+    } */
+
+.pageTitle {
+  font-family: sans-serif;
+  font-size: 28.8px !important;
+  font-weight: normal;
+  color: #222222;
+
+}
+
+blockquote {
+  background: #f9f9f9;
+  border-left: 10px solid #ccc;
+  margin: 1.5em 10px;
+  padding: 1em 10px .1em;
+  quotes: "\201C" "\201D" "\2018" "\2019";
+}
+
+html {
+  /* Replace with your desired color */
+  background-color: #f8f9fa !important;
+
+
+
+}
+
+body {
+  background-color: transparent !important;
+  /*some of the main font settings */
+  font-size: 14px !important;
+  line-height: 22.4px !important;
+  margin-bottom: 7px !important;
+
+}
+
+.contentbod {
+  border-bottom: 1px solid #aaaaaa;
+  margin-top: -5px;
+  margin-bottom: 10px;
+}
+
+.buttonplace {
+  padding-bottom: 20px;
+}
+
+pre {
+  border: 1px solid #bbccdd;
+  border-top-style: solid;
+  overflow: auto;
+  word-break: break-all;
+  white-space: pre-wrap !important;
+  padding: 1em;
+  background-color: #ebf1f5;
+  font-family: monospace;
+}
+
+
+
+
+.categoryMenu {
+  /* Base styles for the ul element */
+
+  background-color: #f8f9fa;
+  margin-top: 1em;
+  border: 1px solid #a2a9b1;
+  padding: 5px;
+  clear: both;
+}
+
+
+
+.categoryMenu ul {
+  display: inline;
+}
+
+.categoryMenu li {
+  /* Styles for individual menu items */
+
+  display: inline-block;
+  line-height: 1.25em;
+  margin: 0.125em 0;
+  border-left: 1px solid #a2a9b1;
+  padding: 0 0.2em 0 0.45em;
+
+}
+
+.categoryMenu li:nth-child(2) {
+  border-left: none;
+}
+
+.categoryMenu li::before {
+  left: 0;
+  /* Position left border */
+}
+
+.categoryMenu li::after {
+  right: 0;
+  /* Position right border */
+}
+
+.categoryMenu li a {
+  /* Styles for link elements within menu items */
+  text-decoration: none;
+  padding: 10px 0;
+  /* Maintain vertical padding but remove horizontal to utilize full item width */
+  transition: background-color 0.2s ease-in-out;
+  /* Add subtle hover transition */
+}
+
+.categoryMenu li a:hover {
+  text-decoration: underline;
+}

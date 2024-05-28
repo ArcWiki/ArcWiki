@@ -1,0 +1,10 @@
+{
+    "menu": [
+        {"name": "Main page", "link": "/"},
+        {"name": "Random Page", "link": "/title/Special:Random"},
+        {"name": "Help", "link": "/title/Category:Help"},
+        {"name": "Statistics", "link": "/"},
+        {"name": "AllPages", "link": "/title/Special:AllPages"},
+        {"name": "AllCats", "link": "/title/Special:Categories"}
+    ]
+}

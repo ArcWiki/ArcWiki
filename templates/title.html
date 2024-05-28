@@ -1,0 +1,58 @@
+{{template "header" .}}
+{{template "navbar" .}}
+
+
+
+<div class="container-fluid py-4">
+  <div class="row gx-2">
+    <div class="col-1 d-none d-sm-block " style="width: fit-content;">
+
+      <h5
+        style="text-align:left;overflow-x:hidden;overflow-y:hidden;width:auto;color:rgb(34, 34, 34);background-color: transparent; display:inline;height:1em;text-transform:lowercase;font-size:91%;font-weight:normal;white-space:nowrap;border-width: medium; border-style: none; margin: 0px 0px 0.3em; padding: 0px 1em 0px 0.5em; ">
+        Navigation</h5>
+      <div class="menu border-1 ">
+
+        <ul>
+          {{.Menu}}
+        </ul>
+
+      </div>
+    </div>
+
+    {{ .Size }}
+    
+
+    
+      <div class="p-4 border-1">
+
+        <div class="float-end">
+          <div class="btn-group btn-group-toggle pull-right" data-toggle="buttons">
+            <a class="btn btn-sm btn-outline-secondary" href="/edit/{{.Title}}">Edit</a>
+            <a class="btn btn-sm btn-outline-secondary" href="/admin">Admin</a>
+          </div>
+        </div>
+
+        <h1 class="pageTitle">{{.CTitle}}</h1>
+        
+
+        <div class="contentbod"></div>
+        {{ if .CategoryLink }}
+        <ul class="categoryMenu">
+          <a style="text-decoration: none;" href="/title/Special:Categories" title="Special:Categories">{{ if gt (len .CategoryLink) 1 }}Categories{{ else }}Category{{ end }}</a>:
+          {{range $links := .CategoryLink}}
+          <li><a href="/title/Category:{{$links}}">{{$links}}</a></li>{{end}}
+        </ul>
+        
+        {{ end }}
+
+
+        {{.Body}}
+
+        
+      </div>
+      {{template "footer" .}}
+    </div>
+    
+  </div>
+  
+</div>

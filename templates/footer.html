@@ -1,0 +1,45 @@
+{{define "footer"}}
+
+<div class="d-flex justify-content-between">
+  <div class="p-2 bd-highlight">
+    <footer>
+      
+      <p style="color: #202122;
+        font-size: 0.75em;">
+
+        {{ .UpdatedDate }}
+
+    
+      </p>
+     
+      <ul class="nav" style="color: #202122;
+      font-size: 0.75em;">
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-muted">Home</a></li>
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-muted">All Pages</a></li>
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-muted">All Categories</a></li>
+        <li class="nav-item"><a href="#" class="nav-link px-2 text-muted">Help</a></li>
+        <li class=" nav-item"><a href="https://www.gnu.org/licenses/gpl-3.0.html" class="nav-link px-2 text-muted">Licence</a></li>
+      </ul>
+
+
+
+
+    </footer>
+  </div>
+  <div class="p-2 bd-highlight">
+    <a href="https://www.gnu.org/licenses/gpl-3.0.html"><img width="88px" height="33px" src="/images/arcwikibanner.png"
+        alt="gpl3"></a>
+    <a href="https://www.gnu.org/licenses/gpl-3.0.html"><img width="88px" height="33px" src="/images/gpl3.svg"
+        alt="gpl3"></a>
+  </div>
+</div>
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+<script src="/images/mdemod.js"></script>
+<script src="/images/validator.js"></script>
+
+</html>
+{{end}}
