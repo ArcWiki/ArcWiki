@@ -128,31 +128,46 @@ func loginHandler(w http.ResponseWriter, r *http.Request, title string, userAgen
 	}
 }
 func loadAdmin() (string, string) {
-	file, err := os.Open("admin.json")
-	if err != nil {
-		fmt.Println("Loading Admin Settings Failed: ")
-		fmt.Println(err)
+	// Allow password to be set in docker
+	username := os.Getenv("USERNAME")
+	if len(username) == 0 {
+		username = "admin" // Set to empty string if not found
 	}
-	defer file.Close()
-
-	// Decode the JSON data
-	var data map[string]interface{}
-	err = json.NewDecoder(file).Decode(&data)
-	if err != nil {
-		fmt.Println("error happened")
+	password := os.Getenv("PASSWORD")
+	if len(password) == 0 {
+		password = "password" // Set to empty string if not found
 	}
 
-	menuItems := data["admin"].([]interface{})
+	if len(password) > 0 || len(username) > 0 {
+		return username, password
+	} else {
 
-	// Create the list of links
-	username := ""
-	password := ""
-	for _, item := range menuItems {
-		linkData := item.(map[string]interface{})
-		username = linkData["username"].(string)
-		password = linkData["password"].(string)
+		file, err := os.Open("admin.json")
+		if err != nil {
+			fmt.Println("Loading Admin Settings Failed: ")
+			fmt.Println(err)
+		}
+		defer file.Close()
 
+		// Decode the JSON data
+		var data map[string]interface{}
+		err = json.NewDecoder(file).Decode(&data)
+		if err != nil {
+			fmt.Println("error happened")
+		}
+
+		menuItems := data["admin"].([]interface{})
+
+		// Create the list of links
+		username := ""
+		password := ""
+		for _, item := range menuItems {
+			linkData := item.(map[string]interface{})
+			username = linkData["username"].(string)
+			password = linkData["password"].(string)
+
+		}
+
+		return username, password
 	}
-
-	return username, password
 }

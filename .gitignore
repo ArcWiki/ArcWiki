@@ -21,3 +21,8 @@
 go.work
 go.work.sum
 
+#remove database
+#*.db
+#remove workspace
+gowiki.code-workspace
+wiki.backup
