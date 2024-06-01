@@ -24,7 +24,6 @@ import (
 
 	"log"
 	"net/http"
-	"os"
 	"regexp"
 	"strings"
 
@@ -154,7 +153,8 @@ func editHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 		auth, ok := session.Values["authenticated"].(bool)
 
 		if !ok || !auth {
-			http.Error(w, "Forbidden", http.StatusForbidden)
+			//http.Error(w, "Forbidden", http.StatusForbidden)
+			http.Redirect(w, r, "/error", http.StatusFound)
 			return
 		} else {
 
@@ -172,7 +172,8 @@ func editHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 		auth, ok := session.Values["authenticated"].(bool)
 
 		if !ok || !auth {
-			http.Error(w, "Forbidden", http.StatusForbidden)
+			//http.Error(w, "Forbidden", http.StatusForbidden)
+			http.Redirect(w, r, "/error", http.StatusFound)
 			return
 		} else {
 
@@ -264,7 +265,8 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/admin/manage", http.StatusFound)
 	} else {
 		// Handle invalid resource type
-		http.Error(w, "Invalid resource type", http.StatusBadRequest)
+		//http.Error(w, "Invalid resource type", http.StatusBadRequest)
+		http.Redirect(w, r, "/error", http.StatusFound)
 	}
 }
 
@@ -285,7 +287,8 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	auth, ok := session.Values["authenticated"].(bool)
 
 	if !ok || !auth {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		http.Redirect(w, r, "/error", http.StatusFound)
+		//http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	} else {
 
@@ -307,15 +310,24 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 
 // Error page needs to be used
 func errorPage(w http.ResponseWriter, r *http.Request) {
-	htmlContent, err := os.ReadFile("errorPage.html")
-
+	detect := mobiledetect.New(r, nil)
+	userAgent := ""
+	if detect.IsMobile() || detect.IsTablet() {
+		fmt.Println("is either a mobile or tablet")
+		userAgent = "mobile"
+	} else {
+		userAgent = "desktop"
+	}
+	p, err := loadPageSpecial("Error", "specialPageName", userAgent)
 	if err != nil {
 		http.Error(w, "Error loading HTML file", http.StatusInternalServerError)
 		return
 	}
+	renderTemplate(w, "errorPage", p)
+	// htmlContent, err := os.ReadFile("templates/errorPage.html")
 
-	w.Header().Set("Content-Type", "text/html")
-	w.Write(htmlContent)
+	// w.Header().Set("Content-Type", "text/html")
+	// w.Write(htmlContent)
 }
 func dbsql(stater string, args ...interface{}) error {
 	db, err := loadDatabase()

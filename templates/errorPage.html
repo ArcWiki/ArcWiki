@@ -1,56 +1,40 @@
 {{template "header" .}}
 {{template "navbar" .}}
+<div class="container-fluid py-4">
+  <div class="row gx-2">
+    <div class="col-1 d-none d-sm-block " style="width: fit-content;">
 
-<div class="container-xxl py-4">
-  <div class="row gx-5">
-    <div class="col-2 d-none d-sm-block">
-      <!-- larger screens -->
-      <div class="p-4 border-1 "><img alt="ArcWiki" class="block" width="150px" height="auto"
-          src="/images/electric-icon.png" />
-        <ul class="nav flex-column">
+      <h5
+        style="text-align:left;overflow-x:hidden;overflow-y:hidden;width:auto;color:rgb(34, 34, 34);background-color: transparent; display:inline;height:1em;text-transform:lowercase;font-size:91%;font-weight:normal;white-space:nowrap;border-width: medium; border-style: none; margin: 0px 0px 0.3em; padding: 0px 1em 0px 0.5em; ">
+        Navigation</h5>
+      <div class="menu border-1 ">
+
+        <ul>
           {{.Menu}}
         </ul>
+
       </div>
     </div>
-    <div class="col-12 d-block d-sm-none">
-      <!-- show on small screen -->
-      <div class="p-4 border-1">
-        <div class="float-end">
-          <div class="btn-group btn-group-toggle pull-right" data-toggle="buttons">
-            <a class="btn btn-sm btn-outline-secondary" href="#">Article</a>
-            <a class="btn  btn-sm btn-outline-secondary" href="#">Talk</a>
-            <a class="btn btn-sm btn-outline-secondary" href="edit/{{.Title}}">Edit</a>
-            <a class="btn btn-sm btn-outline-secondary" href="title/{{.Title}}">Edit</a>
-          </div>
-        </div>
 
-        <h1 class="pageTitle">{{.Title}}</h1>
-
-
-        <div class="contentbod"></div>
-
-        {{.Body}}
-      </div>
-    </div>
-    <div class="col-10 d-none d-sm-block">
-      <!-- larger screens -->
+    {{.Size}}
+    
+ 
 
       <div class="p-4 border-1">
         <div class="float-end">
           <div class="btn-group btn-group-toggle pull-right" data-toggle="buttons">
-            <a class="btn btn-sm btn-outline-secondary" href="#">Article</a>
-            <a class="btn  btn-sm btn-outline-secondary" href="#">Talk</a>
             <a class="btn btn-sm btn-outline-secondary" href="edit/{{.Title}}">Edit</a>
             <a class="btn btn-sm btn-outline-secondary" href="/admin">Admin</a>
           </div>
         </div>
 
-        <h1 class="pageTitle">Error Happened</h1>
-
+        <h1 class="pageTitle">Error</h1>
+        <h3>{{.Size}}</h3>
 
         <div class="contentbod"></div>
+        <span class="badge bg-danger">404 or Login Failure</span><br />
+        <a href="/login"> Login Here</a>
 
-        an error happened maybe a 404
       </div>
       {{template "footer" .}}
     </div>

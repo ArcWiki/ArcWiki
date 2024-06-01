@@ -123,23 +123,19 @@ func loginHandler(w http.ResponseWriter, r *http.Request, title string, userAgen
 			http.Redirect(w, r, "/admin", http.StatusFound)
 		} else {
 			// Authentication failed
-			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+			http.Redirect(w, r, "/error", http.StatusFound)
+
+			//http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		}
 	}
 }
 func loadAdmin() (string, string) {
 	// Allow password to be set in docker
 	username := os.Getenv("USERNAME")
-	if len(username) == 0 {
-		username = "admin" // Set to empty string if not found
-	}
 	password := os.Getenv("PASSWORD")
-	if len(password) == 0 {
-		password = "password" // Set to empty string if not found
-	}
 
-	if len(password) > 0 || len(username) > 0 {
-		return username, password
+	if username != "" && password != "" {
+		return username, password // Return credentials if found
 	} else {
 
 		file, err := os.Open("admin.json")

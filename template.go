@@ -23,7 +23,7 @@ import (
 	"net/http"
 )
 
-var templates = template.Must(template.ParseFiles("templates/header.html", "templates/footer.html", "templates/navbar.html", "templates/edit.html", "templates/title.html", "templates/add.html", "templates/login.html", "templates/editCategory.html"))
+var templates = template.Must(template.ParseFiles("templates/header.html", "templates/footer.html", "templates/navbar.html", "templates/edit.html", "templates/title.html", "templates/add.html", "templates/login.html", "templates/editCategory.html", "templates/errorPage.html"))
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 
