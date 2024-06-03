@@ -15,7 +15,7 @@
 	# Build the Go application
 	RUN go build -o arcwiki
 	FROM alpine:latest
-	COPY --from=builder /app/arcwiki .
+	COPY --from=builder /app /app
 	# Set environment variables for configuration
 	ENV PORT=8080
 	ENV DB_HOST=localhost
