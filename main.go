@@ -362,7 +362,7 @@ var config Config // Package-level variable
 func main() {
 	dbSetup()
 	config.SiteTitle = os.Getenv("SITENAME")
-	if config.SiteTitle != "" {
+	if config.SiteTitle == "" {
 		data, err := ioutil.ReadFile("config.json")
 		if err != nil {
 			panic(err) // Handle the error appropriately in production
