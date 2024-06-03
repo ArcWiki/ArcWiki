@@ -14,3 +14,5 @@ or
 you can specify the username or password respectively:
 
 ``` docker run -e USERNAME=jack -e PASSWORD=pumpkin --name arcwiki -p 8080:8080 -d spanglesontoast/arcwiki ```
+you can specify sitename with SITENAME enviroment variable
+``` docker run -e SITENAME="Marvel Wiki" -e USERNAME=jack -e PASSWORD=pumpkin --name arcwiki -p 8080:8080 -d spanglesontoast/arcwiki ```
