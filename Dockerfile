@@ -1,5 +1,5 @@
 	# Use the official Golang image as the base image
-	FROM golang:latest AS builder
+	FROM golang:latest 
 	 
 	# Set the working directory inside the container
 	WORKDIR /app
@@ -14,8 +14,7 @@
 	COPY . .
 	# Build the Go application
 	RUN go build -o arcwiki
-	FROM alpine:latest
-	COPY --from=builder /app /app
+
 	# Set environment variables for configuration
 	ENV PORT=8080
 	ENV DB_HOST=localhost
