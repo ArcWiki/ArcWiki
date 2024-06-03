@@ -30,6 +30,7 @@ import (
 )
 
 type AddPage struct {
+	NavTitle    string
 	CTitle      string
 	Title       string
 	Body        string
@@ -39,6 +40,7 @@ type AddPage struct {
 	UpdatedDate string
 }
 type Page struct {
+	NavTitle     string
 	CTitle       string
 	Title        string
 	Body         template.HTML
@@ -49,6 +51,7 @@ type Page struct {
 }
 
 type EditPage struct {
+	NavTitle    string
 	CTitle      string
 	Title       string
 	Body        template.HTML
@@ -141,6 +144,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 	http.Redirect(w, r, "/title/"+canonicalizeTitle(titleSave), http.StatusFound)
 }
 func loadPage(title string, userAgent string) (*Page, error) {
+
 	safeMenu, err := loadMenu()
 	if err != nil {
 		return nil, err
@@ -185,12 +189,12 @@ func loadPage(title string, userAgent string) (*Page, error) {
 	//need to double check this as I'm not certain why this is
 	if err == nil { // Page found in database
 		// ... (existing code for markdown parsing and HTML generation)
-		return &Page{CTitle: removeUnderscores(title), Title: title, Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink, UpdatedDate: footer}, nil
+		return &Page{NavTitle: config.SiteTitle, CTitle: removeUnderscores(title), Title: title, Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink, UpdatedDate: footer}, nil
 	} else if err != sql.ErrNoRows { // Handle other SQLite errors
 		return nil, err
 	}
 
-	return &Page{CTitle: removeUnderscores(title), Title: title, Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, UpdatedDate: footer}, nil
+	return &Page{NavTitle: config.SiteTitle, CTitle: removeUnderscores(title), Title: title, Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, UpdatedDate: footer}, nil
 	//return nil, fmt.Errorf("File not found: %s.txt", title) // File not found in any folder
 }
 
@@ -226,7 +230,7 @@ func loadPageNoHtml(title string, userAgent string) (*EditPage, error) {
 		return nil, err
 	}
 	footer := "This page was last modified on " + formatDateTime(updated_at)
-	return &EditPage{CTitle: removeUnderscores(title), Title: title, Body: template.HTML(body), Menu: template.HTML(safeMenu), Size: template.HTML(size), UpdatedDate: footer}, nil
+	return &EditPage{NavTitle: config.SiteTitle, CTitle: removeUnderscores(title), Title: title, Body: template.HTML(body), Menu: template.HTML(safeMenu), Size: template.HTML(size), UpdatedDate: footer}, nil
 }
 func loadPageSpecial(title string, categoryName string, userAgent string) (*Page, error) {
 	//size := "w-full max-w-7xl mx-auto px-4 py-8"
@@ -277,11 +281,12 @@ func loadPageSpecial(title string, categoryName string, userAgent string) (*Page
 			return nil, err // Return error if menu file reading fails
 		}
 		return &Page{
-			CTitle: "Special:All Categories",
-			Title:  "Special:All Categories",
-			Body:   template.HTML(bodyHTML),
-			Size:   template.HTML(size),
-			Menu:   template.HTML(safeMenu),
+			NavTitle: config.SiteTitle,
+			CTitle:   "Special:All Categories",
+			Title:    "Special:All Categories",
+			Body:     template.HTML(bodyHTML),
+			Size:     template.HTML(size),
+			Menu:     template.HTML(safeMenu),
 		}, nil
 	} else if categoryName == "AllPages" {
 		db, err := loadDatabase()
@@ -312,11 +317,12 @@ func loadPageSpecial(title string, categoryName string, userAgent string) (*Page
 			return nil, err // Return error if menu file reading fails
 		}
 		return &Page{
-			CTitle: "Special:AllPages",
-			Title:  "Special:AllPages",
-			Body:   template.HTML(bodyHTML),
-			Size:   template.HTML(size),
-			Menu:   template.HTML(safeMenu),
+			NavTitle: config.SiteTitle,
+			CTitle:   "Special:AllPages",
+			Title:    "Special:AllPages",
+			Body:     template.HTML(bodyHTML),
+			Size:     template.HTML(size),
+			Menu:     template.HTML(safeMenu),
 		}, nil
 	} else {
 
@@ -325,10 +331,11 @@ func loadPageSpecial(title string, categoryName string, userAgent string) (*Page
 			return nil, err // Return error if menu file reading fails
 		}
 		return &Page{
-			Title: "Special:All Categories",
-			Body:  template.HTML("nothing here"),
-			Size:  template.HTML(size),
-			Menu:  template.HTML(safeMenu),
+			NavTitle: config.SiteTitle,
+			Title:    "Special:All Categories",
+			Body:     template.HTML("nothing here"),
+			Size:     template.HTML(size),
+			Menu:     template.HTML(safeMenu),
 		}, nil
 	}
 }

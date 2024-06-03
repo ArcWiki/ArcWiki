@@ -40,7 +40,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request, title string, userAgen
 		}
 
 		bodyMark :=
-			`<a class="btn btn-sm btn-outline-secondary" href="/edit/menu"> Edit Menu </a><br />
+			`
 	<a class="btn btn-sm btn-outline-secondary" href="/add"> Add Page </a><br />
 	<a class="btn btn-sm btn-outline-secondary" href="/admin/page"> Manage Pages </a><br />
 	<a class="btn btn-sm btn-outline-secondary" href="/admin/category"> Manage Category </a>
@@ -62,7 +62,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request, title string, userAgen
 			fmt.Println("error loading menu")
 		}
 
-		p := Page{CTitle: "Admin panel", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink}
+		p := Page{NavTitle: config.SiteTitle, CTitle: "Admin panel", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink}
 
 		// Assuming renderTemplate accepts a string for body content:
 		renderTemplate(w, "title", &p) // Pass only the body string
@@ -108,7 +108,7 @@ func manageCategory(userAgent string, baseURL string, w http.ResponseWriter) {
 		fmt.Println("error loading menu")
 	}
 
-	p := Page{CTitle: "Manage Category", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu}
+	p := Page{NavTitle: config.SiteTitle, CTitle: "Manage Category", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu}
 
 	renderTemplate(w, "title", &p)
 }
@@ -152,7 +152,7 @@ func managePages(userAgent string, baseURL string, w http.ResponseWriter) {
 		fmt.Println("error loading menu")
 	}
 
-	p := Page{CTitle: "Manage Pages", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu}
+	p := Page{NavTitle: config.SiteTitle, CTitle: "Manage Pages", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu}
 
 	renderTemplate(w, "title", &p)
 }

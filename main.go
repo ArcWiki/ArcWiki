@@ -18,8 +18,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/ioutil"
+	"os"
 	"time"
 
 	"log"
@@ -300,7 +303,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// Create an AddPage instance directly (no loading from file)
-		ap := &AddPage{CTitle: "Add Page", Title: title, Menu: safeMenu, Size: template.HTML(size), UpdatedDate: ""}
+		ap := &AddPage{NavTitle: config.SiteTitle, CTitle: "Add Page", Title: title, Menu: safeMenu, Size: template.HTML(size), UpdatedDate: ""}
 
 		// Populate other fields of ap as needed (e.g., from session data, user input, etc.)
 
@@ -351,9 +354,31 @@ func dbsql(stater string, args ...interface{}) error {
 	return nil // Indicate successful execution
 }
 
+type Config struct {
+	SiteTitle string `json:"siteTitle"`
+}
+
+var config Config // Package-level variable
 func main() {
 	dbSetup()
+	config.SiteTitle = os.Getenv("SITENAME")
+	if config.SiteTitle != "" {
+		data, err := ioutil.ReadFile("config.json")
+		if err != nil {
+			panic(err) // Handle the error appropriately in production
+		}
 
+		// Unmarshal the JSON data
+
+		err = json.Unmarshal(data, &config)
+		if err != nil {
+			panic(err) // Handle the error appropriately in production
+		}
+
+	}
+
+	// Access the extracted value
+	fmt.Println("Site Title:", config.SiteTitle)
 	go func() {
 		for {
 			if err := updateCategoryLinks(); err != nil {
