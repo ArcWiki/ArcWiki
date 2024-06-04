@@ -22,13 +22,13 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
-	"os"
-	"time"
-
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/houseme/mobiledetect"
 	_ "github.com/mattn/go-sqlite3"
@@ -408,8 +408,9 @@ func main() {
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
 	http.HandleFunc("/images/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, r.URL.Path[1:])
-		//fmt.Println(r.URL.Path[1:])
+		imagePath := filepath.Join("images", filepath.Clean(r.URL.Path[1:])) // Clean path to prevent directory traversal
+		http.ServeFile(w, r, imagePath)
+
 	})
 
 	http.HandleFunc("/error", errorPage)

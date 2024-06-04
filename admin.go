@@ -41,11 +41,15 @@ func adminHandler(w http.ResponseWriter, r *http.Request, title string, userAgen
 
 		bodyMark :=
 			`
-	<a class="btn btn-sm btn-outline-secondary" href="/add"> Add Page </a><br />
-	<a class="btn btn-sm btn-outline-secondary" href="/admin/page"> Manage Pages </a><br />
-	<a class="btn btn-sm btn-outline-secondary" href="/admin/category"> Manage Category </a><br />
-	<a class="btn btn-sm btn-outline-secondary" href="/logout"> Logout </a>
-	`
+		<div class="row">
+				<div class="col-xs-6 col-md-6">
+			<a class="btn btn-sm btn-outline-secondary" href="/add"> Add Page </a>
+			<a class="btn btn-sm btn-outline-secondary" href="/admin/page"> Manage Pages </a>
+			<a class="btn btn-sm btn-outline-secondary" href="/admin/category"> Manage Category </a>
+			<a class="btn btn-sm btn-outline-secondary" href="/logout"> Logout </a>
+			</div>
+		</div>
+		`
 		//bodyMark := markdown.ToHTML([]byte(readBody), nil, nil)
 		//bodyMark := "hey hey"
 		parsedText := addHeadingIDs(string(bodyMark))
