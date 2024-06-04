@@ -281,6 +281,7 @@ func loadPageSpecial(title string, categoryName string, userAgent string) (*Page
 			return nil, err // Return error if menu file reading fails
 		}
 		return &Page{
+
 			NavTitle: config.SiteTitle,
 			CTitle:   "Special:All Categories",
 			Title:    "Special:All Categories",

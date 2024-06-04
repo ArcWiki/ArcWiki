@@ -373,13 +373,19 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 	// Separate logic for static content (JS/CSS)
 	if ext == ".js" || ext == ".css" {
 		// Implement path construction for static content directory (e.g., "static")
-		staticPath := filepath.Join("static", filename)
+		staticPath := filepath.Join("images", filename)
 		http.ServeFile(w, r, staticPath)
 	} else {
 		// Existing logic for image path construction
 		imagePath := filepath.Join("images", filename[:len(filename)-len(ext)]) + ext
 		http.ServeFile(w, r, imagePath)
 	}
+}
+func styleHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "images/lector.css")
+}
+func iHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "images/arcwiki.svg")
 }
 
 type Config struct {
@@ -435,7 +441,9 @@ func main() {
 	http.HandleFunc("/title/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
-	http.HandleFunc("/images/", imageHandler)
+	//http.HandleFunc("/images/", imageHandler)
+	http.HandleFunc("/images/lector.css", styleHandler)
+	http.HandleFunc("/images/arcwiki.svg", iHandler)
 	http.HandleFunc("/error", errorPage)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
