@@ -43,7 +43,8 @@ func adminHandler(w http.ResponseWriter, r *http.Request, title string, userAgen
 			`
 	<a class="btn btn-sm btn-outline-secondary" href="/add"> Add Page </a><br />
 	<a class="btn btn-sm btn-outline-secondary" href="/admin/page"> Manage Pages </a><br />
-	<a class="btn btn-sm btn-outline-secondary" href="/admin/category"> Manage Category </a>
+	<a class="btn btn-sm btn-outline-secondary" href="/admin/category"> Manage Category </a><br />
+	<a class="btn btn-sm btn-outline-secondary" href="/logout"> Logout </a>
 	`
 		//bodyMark := markdown.ToHTML([]byte(readBody), nil, nil)
 		//bodyMark := "hey hey"

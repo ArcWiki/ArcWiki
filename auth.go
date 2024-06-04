@@ -103,7 +103,7 @@ func logout(w http.ResponseWriter, r *http.Request, title string, userAgent stri
 	// Revoke users authentication
 	session.Values["authenticated"] = false
 	session.Save(r, w)
-	http.Redirect(w, r, "/title/index", http.StatusFound)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
