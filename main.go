@@ -353,6 +353,34 @@ func dbsql(stater string, args ...interface{}) error {
 
 	return nil // Indicate successful execution
 }
+func imageHandler(w http.ResponseWriter, r *http.Request) {
+	validExtensions := map[string]bool{
+		".jpg": true,
+		".png": true,
+		".gif": true,
+		".js":  true,
+		".css": true,
+	}
+
+	filename := filepath.Base(r.URL.Path[1:])
+	ext := filepath.Ext(filename)
+
+	if !validExtensions[ext] {
+		http.Error(w, "Invalid file format", http.StatusBadRequest)
+		return
+	}
+
+	// Separate logic for static content (JS/CSS)
+	if ext == ".js" || ext == ".css" {
+		// Implement path construction for static content directory (e.g., "static")
+		staticPath := filepath.Join("static", filename)
+		http.ServeFile(w, r, staticPath)
+	} else {
+		// Existing logic for image path construction
+		imagePath := filepath.Join("images", filename[:len(filename)-len(ext)]) + ext
+		http.ServeFile(w, r, imagePath)
+	}
+}
 
 type Config struct {
 	SiteTitle string `json:"siteTitle"`
@@ -407,12 +435,7 @@ func main() {
 	http.HandleFunc("/title/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
-	http.HandleFunc("/images/", func(w http.ResponseWriter, r *http.Request) {
-		imagePath := filepath.Join("images", filepath.Clean(r.URL.Path[1:])) // Clean path to prevent directory traversal
-		http.ServeFile(w, r, imagePath)
-
-	})
-
+	http.HandleFunc("/images/", imageHandler)
 	http.HandleFunc("/error", errorPage)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
