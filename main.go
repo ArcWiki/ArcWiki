@@ -25,7 +25,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -353,39 +352,25 @@ func dbsql(stater string, args ...interface{}) error {
 
 	return nil // Indicate successful execution
 }
-func imageHandler(w http.ResponseWriter, r *http.Request) {
-	validExtensions := map[string]bool{
-		".jpg": true,
-		".png": true,
-		".gif": true,
-		".js":  true,
-		".css": true,
-	}
 
-	filename := filepath.Base(r.URL.Path[1:])
-	ext := filepath.Ext(filename)
-
-	if !validExtensions[ext] {
-		http.Error(w, "Invalid file format", http.StatusBadRequest)
-		return
-	}
-
-	// Separate logic for static content (JS/CSS)
-	if ext == ".js" || ext == ".css" {
-		// Implement path construction for static content directory (e.g., "static")
-		staticPath := filepath.Join("images", filename)
-		http.ServeFile(w, r, staticPath)
-	} else {
-		// Existing logic for image path construction
-		imagePath := filepath.Join("images", filename[:len(filename)-len(ext)]) + ext
-		http.ServeFile(w, r, imagePath)
-	}
-}
 func styleHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "images/lector.css")
 }
-func iHandler(w http.ResponseWriter, r *http.Request) {
+func logoHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "images/arcwiki.svg")
+}
+func mdeHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "images/mdemod.js")
+}
+func validatorHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "images/validator.js")
+}
+func awbHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "images/arcwikibanner.png")
+}
+
+func gplLogoHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "images/gpl3.svg")
 }
 
 type Config struct {
@@ -441,10 +426,13 @@ func main() {
 	http.HandleFunc("/title/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
-	//http.HandleFunc("/images/", imageHandler)
-	http.HandleFunc("/images/lector.css", styleHandler)
-	http.HandleFunc("/images/arcwiki.svg", iHandler)
 	http.HandleFunc("/error", errorPage)
+	http.HandleFunc("/images/lector.css", styleHandler)
+	http.HandleFunc("/images/arcwiki.svg", logoHandler)
+	http.HandleFunc("/images/arcwikibanner.png", awbHandler)
+	http.HandleFunc("/images/gpl3.svg", gplLogoHandler)
+	http.HandleFunc("/images/mdemod.js", mdeHandler)
+	http.HandleFunc("/images/validator.js", validatorHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
