@@ -18,6 +18,7 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -378,8 +379,42 @@ type Config struct {
 }
 
 var config Config // Package-level variable
+var myScriptFS embed.FS
+
+func serveValidator(w http.ResponseWriter, r *http.Request) {
+	scriptBytes, err := myScriptFS.ReadFile("images/validator.js")
+	if err != nil {
+		http.Error(w, "Error reading script", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/javascript") // Set appropriate content type
+	w.Write(scriptBytes)
+}
+func serveScript(w http.ResponseWriter, r *http.Request) {
+	scriptBytes, err := myScriptFS.ReadFile("images/mdemod.js")
+	if err != nil {
+		http.Error(w, "Error reading script", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/javascript") // Set appropriate content type
+	w.Write(scriptBytes)
+}
+
+func serveBanner(w http.ResponseWriter, r *http.Request) {
+	scriptBytes, err := myScriptFS.ReadFile("images/arcwikibanner.png")
+	if err != nil {
+		http.Error(w, "Error reading script", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "image/png") // Set header for JPEG
+	w.Write(scriptBytes)
+}
+
 func main() {
 	dbSetup()
+
 	config.SiteTitle = os.Getenv("SITENAME")
 	if config.SiteTitle == "" {
 		data, err := ioutil.ReadFile("config.json")
@@ -429,10 +464,10 @@ func main() {
 	http.HandleFunc("/error", errorPage)
 	http.HandleFunc("/images/lector.css", styleHandler)
 	http.HandleFunc("/images/arcwiki.svg", logoHandler)
-	http.HandleFunc("/images/arcwikibanner.png", awbHandler)
+	http.HandleFunc("/images/arcwikibanner.png", serveBanner)
 	http.HandleFunc("/images/gpl3.svg", gplLogoHandler)
-	http.HandleFunc("/images/mdemod.js", mdeHandler)
-	http.HandleFunc("/images/validator.js", validatorHandler)
+	http.HandleFunc("/images/mdemod.js", serveScript)
+	http.HandleFunc("/images/validator.js", serveValidator)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
