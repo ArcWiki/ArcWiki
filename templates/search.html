@@ -1,0 +1,68 @@
+{{template "header" .}}
+{{template "navbar" .}}
+
+
+
+<div class="container-fluid py-4">
+  <div class="row gx-2">
+    <div class="col-1 d-none d-sm-block " style="width: fit-content;">
+
+      <h5
+        style="text-align:left;overflow-x:hidden;overflow-y:hidden;width:auto;color:rgb(34, 34, 34);background-color: transparent; display:inline;height:1em;text-transform:lowercase;font-size:91%;font-weight:normal;white-space:nowrap;border-width: medium; border-style: none; margin: 0px 0px 0.3em; padding: 0px 1em 0px 0.5em; ">
+        Navigation</h5>
+      <div class="menu border-1 ">
+
+        <ul>
+          {{.Menu}}
+        </ul>
+       
+      </div>
+      
+    </div>
+
+    {{ .Size }}
+    
+
+    
+      <div class="p-4 border-1">
+
+        <div class="float-end">
+          <div class="btn-group btn-group-toggle pull-right" data-toggle="buttons">
+            <a class="btn btn-sm btn-outline-secondary" href="/edit/{{.Title}}">Edit</a>
+            <a class="btn btn-sm btn-outline-secondary" href="/admin">Admin</a>
+          </div>
+        </div>
+
+        <h1 class="pageTitle">Search</h1>
+        
+
+        <div class="contentbod"></div>
+        <form action="/query" method="POST">
+          <div class="mb-3">
+           
+
+            <div class="input-group mb-3">
+              <span class="input-group-prepend bg-white">
+                <span class="input-group-text bg-white" id="basic-addon1">
+                  <i class="ri-search-line"></i>
+                </span>
+              </span>
+              <input type="text" class="form-control"  aria-label="Search" aria-describedby="basic-addon1" id="query" name="query">
+            </div>
+            <div id="emailHelp" class="form-text">Search Pages And Categories</div>
+          </div>
+          <button type="submit" class="bg-dark hover:bg-gray-100 text-white font-semibold py-2 px-4 border border-gray-400 rounded shadow">Submit</button>
+        </form>
+     
+
+
+        {{.Body}}
+
+        
+      </div>
+      {{template "footer" .}}
+    </div>
+    
+  </div>
+  
+</div>

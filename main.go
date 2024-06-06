@@ -204,7 +204,7 @@ func saveCatHandler(w http.ResponseWriter, r *http.Request, title string, userAg
 
 // var validPath = regexp.MustCompile("^/(?:(add|addpage|cat|edit|save|title|Category|Special)/([a-zA-Z0-9]+)|)")
 // var validPath = regexp.MustCompile("^/(?:(add|addpage|cat|edit|save|title|Category|Special)/([a-zA-Z0-9_-]+)|)")
-var validPath = regexp.MustCompile("^/(?:(admin|add|addpage|edit|delete|savecat|save|title|login|Category|Special)/([a-zA-Z0-9'_-]+)|)")
+var validPath = regexp.MustCompile("^/(?:(search|results|admin|add|addpage|edit|delete|savecat|save|title|login|Category|Special)/([a-zA-Z0-9'_-]+)|)")
 
 //var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 
@@ -449,6 +449,8 @@ func main() {
 	}()
 
 	http.HandleFunc("/", makeHandler(viewHandler))
+	http.HandleFunc("/search", makeHandler(searchHandler))
+	http.HandleFunc("/query", queryHandler)
 	http.HandleFunc("/add", addHandler)
 	http.HandleFunc("/addpage", addPage)
 	http.HandleFunc("/delete/", deleteHandler)
