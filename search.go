@@ -22,14 +22,24 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gomarkdown/markdown"
+	"github.com/houseme/mobiledetect"
 )
 
-type Search struct {
-	Rtitle []string
-	Rbody  []string
+type Result struct {
+	Title string `sql:"title"`
+	Body  string `sql:"body"`
+}
+
+type SearchData struct {
+	NavTitle string
+	Menu     template.HTML
+	CTitle   string
+	Results  []Result
+	Size     template.HTML
 }
 
 func queryHandler(w http.ResponseWriter, r *http.Request) {
@@ -44,23 +54,70 @@ func queryHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err) // Handle errors appropriately in production
 	}
-	var titles, bodies []string
+
 	sql := fmt.Sprintf("SELECT title, body FROM Pages WHERE title LIKE '%%%s%%' ORDER BY title DESC", query)
 	rows, err := db.Query(sql)
 
 	defer rows.Close() // Close the rows after iterating
+	safeMenu, err := loadMenu()
+	userAgent := ""
+	size := ""
+	detect := mobiledetect.New(r, nil)
+
+	if detect.IsMobile() || detect.IsTablet() {
+		fmt.Println("is either a mobile or tablet")
+		userAgent = "mobile"
+	} else {
+		userAgent = "desktop"
+	}
+	if userAgent == "desktop" {
+		size = "<div class=\"col-11 d-none d-sm-block\">"
+	} else {
+		size = "<div class=\"col-12 d-block d-sm-none\">"
+	}
+	var data = SearchData{
+		Size:     template.HTML(size),
+		Menu:     safeMenu,
+		NavTitle: config.SiteTitle,
+		CTitle:   "Search",
+	}
 
 	for rows.Next() {
-		var title, body string
-		err := rows.Scan(&title)
+		var result Result
+		err := rows.Scan(&result.Title, &result.Body)
 		if err != nil {
-			fmt.Println("error")
+			// Handle error
 		}
-		titles = append(titles, title)
-		bodies = append(bodies, body)
-
-		fmt.Println(title + body) // Print each title during iteration (for testing)
+		words := strings.Fields(result.Body) // Split on whitespace
+		if len(words) > 7 {                  // Adjust limit as needed (7 words in this example)
+			result.Body = strings.Join(words[:7], " ") + "..." // Join limited words and add ellipsis
+		} else {
+			result.Body = strings.Join(words, " ") // Join all words if under limit
+		}
+		data.Results = append(data.Results, result)
 	}
+
+	var err2 error
+	if err2 != nil {
+		panic(err2) // Handle errors appropriately in production
+	}
+	templates := template.New("") // Create a new template set
+	templates, err = templates.ParseFiles("templates/results.html", "templates/navbar.html", "templates/header.html", "templates/footer.html")
+	if err != nil {
+		// Handle template parsing error
+		fmt.Println("Error parsing templates:", err)
+		return
+	}
+
+	// ... (your search handler logic to get results)
+
+	// Execute the relevant template with data
+	err = templates.ExecuteTemplate(w, "results.html", data) // Assuming search results are in "results"
+	if err != nil {
+		// Handle template execution error
+		fmt.Println("Error executing template:", err)
+	}
+
 	//renderTemplate(w, "search", p)
 
 	//return &Search{Rtitle: titles, Rbody: bodies}, nil
@@ -153,11 +210,11 @@ func loadNothing(title string, userAgent string) (*Page, error) {
 	//need to double check this as I'm not certain why this is
 	if err == nil { // Page found in database
 		// ... (existing code for markdown parsing and HTML generation)
-		return &Page{NavTitle: config.SiteTitle, CTitle: "removeUnderscores(title)", Title: "title", Body: "hey there", Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink, UpdatedDate: footer}, nil
+		return &Page{NavTitle: config.SiteTitle, CTitle: "removeUnderscores(title)", Title: "title", Body: "", Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink, UpdatedDate: footer}, nil
 	} else if err != sql.ErrNoRows { // Handle other SQLite errors
 		return nil, err
 	}
 
-	return &Page{NavTitle: config.SiteTitle, CTitle: "removeUnderscores(title)", Title: "title", Body: "hey there", Size: template.HTML(size), Menu: safeMenu, UpdatedDate: "footer"}, nil
+	return &Page{NavTitle: config.SiteTitle, CTitle: "removeUnderscores(title)", Title: "title", Body: "", Size: template.HTML(size), Menu: safeMenu, UpdatedDate: "footer"}, nil
 	//return nil, fmt.Errorf("File not found: %s.txt", title) // File not found in any folder
 }

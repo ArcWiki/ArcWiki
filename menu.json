@@ -5,6 +5,7 @@
         {"name": "Help", "link": "/title/Category:Help"},
         {"name": "Statistics", "link": "/"},
         {"name": "AllPages", "link": "/title/Special:AllPages"},
-        {"name": "AllCats", "link": "/title/Special:Categories"}
+        {"name": "AllCats", "link": "/title/Special:Categories"},
+        {"name": "Search", "link": "/search"}
     ]
 }

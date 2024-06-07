@@ -28,7 +28,7 @@
 
         <div class="float-end">
           <div class="btn-group btn-group-toggle pull-right" data-toggle="buttons">
-            <a class="btn btn-sm btn-outline-secondary" href="/edit/{{.Title}}">Edit</a>
+          
             <a class="btn btn-sm btn-outline-secondary" href="/admin">Admin</a>
           </div>
         </div>
@@ -56,22 +56,18 @@
      
 
 
-        <h1>Search Results</h1>
-<ul>
-  {{ range $index, $result := .SearchResults }}
-    <li>
-      <h2>{{ $result.Title }}</h2>
-      <p>{{ $result.Body }}</p>
-    </li>
-  {{ end }}
-</ul>
-        
-
-        
-      </div>
-      {{template "footer" .}}
-    </div>
-    
+        <h2 class="wikih2">Search Results</h2>
+        <ul class="list-unstyled">
+          {{if .Results}}  {{range .Results}}
+              <li>
+                <a href="/title/{{.Title}}"> {{.Title}}</a><br>
+                {{.Body}}
+              </li>
+            {{end}}
+          {{else}}
+            <p>No search results found.</p>
+          {{end}}
+        </ul>
   </div>
   
 </div>
