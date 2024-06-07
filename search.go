@@ -54,9 +54,12 @@ func queryHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err) // Handle errors appropriately in production
 	}
-
-	sql := fmt.Sprintf("SELECT title, body FROM Pages WHERE title LIKE '%%%s%%' ORDER BY title DESC", query)
-	rows, err := db.Query(sql)
+	rows, err := db.Query("SELECT title, body FROM Pages WHERE title LIKE ?", "%"+query+"%")
+	if err != nil {
+		// Handle error
+		return
+	}
+	defer rows.Close()
 
 	defer rows.Close() // Close the rows after iterating
 	safeMenu, err := loadMenu()
