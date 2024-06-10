@@ -18,7 +18,6 @@
 package main
 
 import (
-	"embed"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -223,7 +222,7 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string, string)) ht
 		}
 
 		//userAgent := requestHeaders.Get("User-Agent")
-		//fmt.Println("User-Agent:", userAgent)
+		//fmt.Println("passing through")
 
 		m := validPath.FindStringSubmatch(r.URL.Path)
 
@@ -355,7 +354,7 @@ func dbsql(stater string, args ...interface{}) error {
 }
 
 func styleHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "images/lector.css")
+	http.ServeFile(w, r, "css/lector.css")
 }
 func logoHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "images/arcwiki.svg")
@@ -379,38 +378,6 @@ type Config struct {
 }
 
 var config Config // Package-level variable
-var myScriptFS embed.FS
-
-func serveValidator(w http.ResponseWriter, r *http.Request) {
-	scriptBytes, err := myScriptFS.ReadFile("images/validator.js")
-	if err != nil {
-		http.Error(w, "Error reading script", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/javascript") // Set appropriate content type
-	w.Write(scriptBytes)
-}
-func serveScript(w http.ResponseWriter, r *http.Request) {
-	scriptBytes, err := myScriptFS.ReadFile("images/mdemod.js")
-	if err != nil {
-		http.Error(w, "Error reading script", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/javascript") // Set appropriate content type
-	w.Write(scriptBytes)
-}
-
-func serveBanner(w http.ResponseWriter, r *http.Request) {
-	scriptBytes, err := myScriptFS.ReadFile("images/arcwikibanner.png")
-	if err != nil {
-		http.Error(w, "Error reading script", http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "image/png") // Set header for JPEG
-	w.Write(scriptBytes)
-}
 
 func main() {
 	dbSetup()
@@ -464,12 +431,9 @@ func main() {
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
 	http.HandleFunc("/error", errorPage)
-	http.HandleFunc("/images/lector.css", styleHandler)
-	http.HandleFunc("/images/arcwiki.svg", logoHandler)
-	http.HandleFunc("/images/arcwikibanner.png", serveBanner)
-	http.HandleFunc("/images/gpl3.svg", gplLogoHandler)
-	http.HandleFunc("/images/mdemod.js", serveScript)
-	http.HandleFunc("/images/validator.js", serveValidator)
+
+	fs := http.FileServer(http.Dir("./assets"))
+	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 

@@ -100,10 +100,6 @@ func queryHandler(w http.ResponseWriter, r *http.Request) {
 		data.Results = append(data.Results, result)
 	}
 
-	var err2 error
-	if err2 != nil {
-		panic(err2) // Handle errors appropriately in production
-	}
 	templates := template.New("") // Create a new template set
 	templates, err = templates.ParseFiles("templates/results.html", "templates/navbar.html", "templates/header.html", "templates/footer.html")
 	if err != nil {
@@ -213,11 +209,11 @@ func loadNothing(title string, userAgent string) (*Page, error) {
 	//need to double check this as I'm not certain why this is
 	if err == nil { // Page found in database
 		// ... (existing code for markdown parsing and HTML generation)
-		return &Page{NavTitle: config.SiteTitle, CTitle: "removeUnderscores(title)", Title: "title", Body: "", Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink, UpdatedDate: footer}, nil
+		return &Page{NavTitle: config.SiteTitle, CTitle: "Search", Title: "title", Body: "", Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink, UpdatedDate: footer}, nil
 	} else if err != sql.ErrNoRows { // Handle other SQLite errors
 		return nil, err
 	}
 
-	return &Page{NavTitle: config.SiteTitle, CTitle: "removeUnderscores(title)", Title: "title", Body: "", Size: template.HTML(size), Menu: safeMenu, UpdatedDate: "footer"}, nil
+	return &Page{NavTitle: config.SiteTitle, CTitle: "Search", Title: "title", Body: "", Size: template.HTML(size), Menu: safeMenu, UpdatedDate: "footer"}, nil
 	//return nil, fmt.Errorf("File not found: %s.txt", title) // File not found in any folder
 }
