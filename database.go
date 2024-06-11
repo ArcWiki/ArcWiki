@@ -55,7 +55,7 @@ func dbSetup() {
 			fmt.Println(err)
 		}
 
-		if installed == false {
+		if !installed {
 			fmt.Println("now creating tables")
 
 			_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Categories (

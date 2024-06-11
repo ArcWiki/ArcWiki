@@ -63,6 +63,10 @@ func queryHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer rows.Close() // Close the rows after iterating
 	safeMenu, err := loadMenu()
+	if err != nil {
+		// Handle error
+		return
+	}
 	userAgent := ""
 	size := ""
 	detect := mobiledetect.New(r, nil)
@@ -89,7 +93,8 @@ func queryHandler(w http.ResponseWriter, r *http.Request) {
 		var result Result
 		err := rows.Scan(&result.Title, &result.Body)
 		if err != nil {
-			// Handle error
+			fmt.Println("Error with searching database:", err)
+			return
 		}
 		words := strings.Fields(result.Body) // Split on whitespace
 		if len(words) > 7 {                  // Adjust limit as needed (7 words in this example)

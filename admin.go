@@ -84,13 +84,16 @@ func manageCategory(userAgent string, baseURL string, w http.ResponseWriter) {
 
 	db, err := loadDatabase()
 	if err != nil {
+		fmt.Println("Error opening database:", err)
+		return
 
 	}
 	defer db.Close()
 
 	rows, err := db.Query("SELECT title FROM Categories")
 	if err != nil {
-
+		fmt.Println("Error finding categories from database:", err)
+		return
 	}
 	defer rows.Close()
 
@@ -99,6 +102,8 @@ func manageCategory(userAgent string, baseURL string, w http.ResponseWriter) {
 		var title string
 		err := rows.Scan(&title)
 		if err != nil {
+			fmt.Println("Error getting categories rows from database", err)
+			return
 
 		}
 		pageLinks = append(pageLinks, fmt.Sprintf("<li><a href=\"%s%s\">%s</a> <a href=\"%s\"> Edit Category</a> <a href=\"%s\"> Delete Category</a></li>", baseURL, "Category:"+title, title, "/edit/Category:"+title, "/delete/category/"+title))
@@ -128,13 +133,16 @@ func managePages(userAgent string, baseURL string, w http.ResponseWriter) {
 
 	db, err := loadDatabase()
 	if err != nil {
+		fmt.Println("Error loading database", err)
+		return
 
 	}
 	defer db.Close()
 
 	rows, err := db.Query("SELECT title FROM Pages")
 	if err != nil {
-
+		fmt.Println("Error getting Pages from database", err)
+		return
 	}
 	defer rows.Close()
 
@@ -143,6 +151,8 @@ func managePages(userAgent string, baseURL string, w http.ResponseWriter) {
 		var title string
 		err := rows.Scan(&title)
 		if err != nil {
+			fmt.Println("Error getting rows of pages from the database", err)
+			return
 
 		}
 		pageLinks = append(pageLinks, fmt.Sprintf("<li><a href=\"%s%s\">%s</a> <a href=\"%s\"> Edit Page</a> <a href=\"%s\"> Delete Page</a></li>", baseURL, title, title, "/edit/"+title, "/delete/page/"+title))

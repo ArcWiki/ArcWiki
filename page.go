@@ -233,7 +233,9 @@ func loadPageNoHtml(title string, userAgent string) (*EditPage, error) {
 	return &EditPage{NavTitle: config.SiteTitle, CTitle: removeUnderscores(title), Title: title, Body: template.HTML(body), Menu: template.HTML(safeMenu), Size: template.HTML(size), UpdatedDate: footer}, nil
 }
 func loadPageSpecial(title string, categoryName string, userAgent string) (*Page, error) {
+	//func loadPageSpecial(title string, categoryName string, userAgent string) (*Page, error) {
 	//size := "w-full max-w-7xl mx-auto px-4 py-8"
+
 	size := ""
 	if userAgent == "desktop" {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
@@ -283,8 +285,8 @@ func loadPageSpecial(title string, categoryName string, userAgent string) (*Page
 		return &Page{
 
 			NavTitle: config.SiteTitle,
-			CTitle:   "Special:All Categories",
-			Title:    "Special:All Categories",
+			CTitle:   "Special:AllCategories",
+			Title:    "Special:AllCategories",
 			Body:     template.HTML(bodyHTML),
 			Size:     template.HTML(size),
 			Menu:     template.HTML(safeMenu),
@@ -333,7 +335,7 @@ func loadPageSpecial(title string, categoryName string, userAgent string) (*Page
 		}
 		return &Page{
 			NavTitle: config.SiteTitle,
-			Title:    "Special:All Categories",
+			Title:    "Special:AllCategories",
 			Body:     template.HTML("nothing here"),
 			Size:     template.HTML(size),
 			Menu:     template.HTML(safeMenu),

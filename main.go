@@ -34,6 +34,7 @@ import (
 )
 
 func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
+	//.stats.getStats()
 	//category := r.URL.Path[len("/title/"):]
 	if len(r.URL.Path) >= len("/title/") && r.URL.Path[:len("/title/")] == "/title/" {
 		// Path starts with "/title/" and has enough characters for slicing
@@ -326,10 +327,7 @@ func errorPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	renderTemplate(w, "errorPage", p)
-	// htmlContent, err := os.ReadFile("templates/errorPage.html")
 
-	// w.Header().Set("Content-Type", "text/html")
-	// w.Write(htmlContent)
 }
 func dbsql(stater string, args ...interface{}) error {
 	db, err := loadDatabase()
@@ -351,26 +349,6 @@ func dbsql(stater string, args ...interface{}) error {
 	}
 
 	return nil // Indicate successful execution
-}
-
-func styleHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "css/lector.css")
-}
-func logoHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "images/arcwiki.svg")
-}
-func mdeHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "images/mdemod.js")
-}
-func validatorHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "images/validator.js")
-}
-func awbHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "images/arcwikibanner.png")
-}
-
-func gplLogoHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "images/gpl3.svg")
 }
 
 type Config struct {
