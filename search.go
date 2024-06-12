@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ArcWiki/ArcWiki/menu"
 	"github.com/gomarkdown/markdown"
 	"github.com/houseme/mobiledetect"
 )
@@ -62,7 +63,7 @@ func queryHandler(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	defer rows.Close() // Close the rows after iterating
-	safeMenu, err := loadMenu()
+	safeMenu, err := menu.Load()
 	if err != nil {
 		// Handle error
 		return
@@ -170,7 +171,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request, title string, userAge
 }
 func loadNothing(title string, userAgent string) (*Page, error) {
 
-	safeMenu, err := loadMenu()
+	safeMenu, err := menu.Load()
 	if err != nil {
 		return nil, err
 	}

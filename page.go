@@ -26,6 +26,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ArcWiki/ArcWiki/menu"
+
 	"github.com/gomarkdown/markdown"
 )
 
@@ -145,7 +147,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 }
 func loadPage(title string, userAgent string) (*Page, error) {
 
-	safeMenu, err := loadMenu()
+	safeMenu, err := menu.Load()
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +204,7 @@ func loadPage(title string, userAgent string) (*Page, error) {
 func loadPageNoHtml(title string, userAgent string) (*EditPage, error) {
 	size := ""
 
-	safeMenu, err := loadMenu()
+	safeMenu, err := menu.Load()
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +280,7 @@ func loadPageSpecial(title string, categoryName string, userAgent string) (*Page
 		sort.Strings(categories) // Sort alphabetically
 
 		bodyHTML := fmt.Sprintf("<h2 class=\"wikih2\">All Categories</h2><ul>\n%s\n</ul>", strings.Join(categories, "\n"))
-		safeMenu, err := loadMenu()
+		safeMenu, err := menu.Load()
 		if err != nil {
 			return nil, err // Return error if menu file reading fails
 		}
@@ -315,7 +317,7 @@ func loadPageSpecial(title string, categoryName string, userAgent string) (*Page
 		}
 
 		bodyHTML := fmt.Sprintf("<h2 class=\"wikih2\">All Pages</h2><ul>\n%s\n</ul>", strings.Join(pageLinks, "\n"))
-		safeMenu, err := loadMenu()
+		safeMenu, err := menu.Load()
 		if err != nil {
 			return nil, err // Return error if menu file reading fails
 		}
@@ -329,7 +331,7 @@ func loadPageSpecial(title string, categoryName string, userAgent string) (*Page
 		}, nil
 	} else {
 
-		safeMenu, err := loadMenu()
+		safeMenu, err := menu.Load()
 		if err != nil {
 			return nil, err // Return error if menu file reading fails
 		}

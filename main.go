@@ -29,6 +29,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ArcWiki/ArcWiki/menu"
 	"github.com/houseme/mobiledetect"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -296,7 +297,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 
 		title := ""
-		safeMenu, err := loadMenu()
+		safeMenu, err := menu.Load()
 		if err != nil {
 			log.Println("Error loading menu:", err)
 			// Handle the error, e.g., display a user-friendly message

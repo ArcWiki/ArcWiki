@@ -27,6 +27,8 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/ArcWiki/ArcWiki/menu"
 )
 
 type Category struct {
@@ -177,7 +179,7 @@ func loadPageCategory(title string, categoryName string, userAgent string) (*Pag
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
 	}
-	safeMenu, err := loadMenu() // Replace with your menu loading logic
+	safeMenu, err := menu.Load() // Replace with your menu loading logic
 	if err != nil {
 		return nil, err
 	}
@@ -355,7 +357,7 @@ func formatSubCatList(pages []string) string {
 }
 func loadCategoryNoHtml(title string, userAgent string) (*EditPage, error) {
 	size := ""
-	safeMenu, err := loadMenu()
+	safeMenu, err := menu.Load()
 	if err != nil {
 		return nil, err
 	}
