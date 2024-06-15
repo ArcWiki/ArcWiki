@@ -2,7 +2,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://cdn.jsdelivr.net/gh/ArcWiki/ArcWiki@2221be3f4becabe2d61d9da0e9d5114979f7a2be/assets/images/arcwiki.svg">
-  <img alt="Wiki.js" src="https://cdn.jsdelivr.net/gh/ArcWiki/ArcWiki@2221be3f4becabe2d61d9da0e9d5114979f7a2be/assets/images/arcwiki.svg" width="600">
+  <img alt="Wiki.js" src="https://cdn.jsdelivr.net/gh/ArcWiki/ArcWiki@2221be3f4becabe2d61d9da0e9d5114979f7a2be/assets/images/arcwiki.svg" width="100">
 </picture>
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/spanglesontoast/arcwiki)](https://hub.docker.com/r/spanglesontoast/arcwiki)
