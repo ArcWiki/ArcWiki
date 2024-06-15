@@ -1,12 +1,12 @@
 <div align="center">
 
-# ArcWiki
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://cdn.jsdelivr.net/gh/ArcWiki/ArcWiki@2221be3f4becabe2d61d9da0e9d5114979f7a2be/assets/images/arcwiki.svg">
-  <img alt="Wiki.js" src="https://cdn.jsdelivr.net/gh/ArcWiki/ArcWiki@2221be3f4becabe2d61d9da0e9d5114979f7a2be/assets/images/arcwiki.svg" width="100">
+  <img alt="Wiki.js" src="https://cdn.jsdelivr.net/gh/ArcWiki/ArcWiki@2221be3f4becabe2d61d9da0e9d5114979f7a2be/assets/images/arcwiki.svg" width="50">
 </picture>
 
 </div>
+
+# ArcWiki
 [![Docker Pulls](https://img.shields.io/docker/pulls/spanglesontoast/arcwiki)](https://hub.docker.com/r/spanglesontoast/arcwiki)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat)](https://github.com/requarks/wiki/blob/master/LICENSE)
 ##### A community-driven Go wiki inspired by ArchWiki.
