@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ArcWiki/ArcWiki/db"
 	"github.com/ArcWiki/ArcWiki/menu"
 
 	"github.com/gomarkdown/markdown"
@@ -64,7 +65,7 @@ type EditPage struct {
 
 func (p *Page) save() error {
 	fmt.Println("the page saved was called " + p.CTitle)
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		return fmt.Errorf("error loading database: %w", err) // Return a descriptive error
 	}
@@ -102,7 +103,7 @@ func addPage(w http.ResponseWriter, r *http.Request) {
 
 func (p *Page) deletePage() error {
 
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 
 	if err != nil {
 		panic(err)
@@ -157,7 +158,7 @@ func loadPage(title string, userAgent string) (*Page, error) {
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
 	}
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +214,7 @@ func loadPageNoHtml(title string, userAgent string) (*EditPage, error) {
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
 	}
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		return nil, err
 	}
@@ -248,7 +249,7 @@ func loadPageSpecial(title string, categoryName string, userAgent string) (*Page
 
 	if categoryName == "Categories" {
 
-		db, err := loadDatabase()
+		db, err := db.LoadDatabase()
 		if err != nil {
 			return nil, err
 		}
@@ -294,7 +295,7 @@ func loadPageSpecial(title string, categoryName string, userAgent string) (*Page
 			Menu:     template.HTML(safeMenu),
 		}, nil
 	} else if categoryName == "AllPages" {
-		db, err := loadDatabase()
+		db, err := db.LoadDatabase()
 		if err != nil {
 			return nil, err
 		}

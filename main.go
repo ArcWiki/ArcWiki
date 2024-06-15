@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -29,7 +28,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ArcWiki/ArcWiki/db"
 	"github.com/ArcWiki/ArcWiki/menu"
+
 	"github.com/houseme/mobiledetect"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -60,7 +61,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 			//Gets a list of pages and Random lands on one
 		case strings.HasPrefix(category, "Special:Random"):
 			fmt.Println("Random page accessed")
-			db, err := loadDatabase()
+			db, err := db.LoadDatabase()
 			if err != nil {
 				panic(err) // Handle errors appropriately in production
 			}
@@ -331,7 +332,7 @@ func errorPage(w http.ResponseWriter, r *http.Request) {
 
 }
 func dbsql(stater string, args ...interface{}) error {
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		fmt.Println("Database Error: " + err.Error())
 
@@ -352,6 +353,34 @@ func dbsql(stater string, args ...interface{}) error {
 	return nil // Indicate successful execution
 }
 
+// moved here for ease
+var templates = template.Must(template.ParseFiles("templates/search.html", "templates/header.html", "templates/footer.html", "templates/navbar.html", "templates/edit.html", "templates/title.html", "templates/add.html", "templates/login.html", "templates/editCategory.html", "templates/errorPage.html"))
+
+func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
+
+	err := templates.ExecuteTemplate(w, tmpl+".html", p)
+	if err != nil {
+		fmt.Println("Error Occured in renderTemplate " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+func renderEditPageTemplate(w http.ResponseWriter, tmpl string, ep *EditPage) {
+	err := templates.ExecuteTemplate(w, tmpl+".html", ep)
+	if err != nil {
+		fmt.Println("Error Occured in renderEditPageTemplate " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func renderAddPageTemplate(w http.ResponseWriter, tmpl string, ap *AddPage) {
+	err := templates.ExecuteTemplate(w, tmpl+".html", ap)
+	if err != nil {
+		fmt.Println("Error Occured in renderAddPageTemplate " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+// site wide title variable
 type Config struct {
 	SiteTitle string `json:"siteTitle"`
 }
@@ -359,11 +388,11 @@ type Config struct {
 var config Config // Package-level variable
 
 func main() {
-	dbSetup()
+	db.DbSetup()
 
 	config.SiteTitle = os.Getenv("SITENAME")
 	if config.SiteTitle == "" {
-		data, err := ioutil.ReadFile("config.json")
+		data, err := os.ReadFile("config.json")
 		if err != nil {
 			panic(err) // Handle the error appropriately in production
 		}
@@ -395,8 +424,8 @@ func main() {
 	}()
 
 	http.HandleFunc("/", makeHandler(viewHandler))
-	http.HandleFunc("/search", makeHandler(searchHandler))
-	http.HandleFunc("/query", queryHandler)
+	http.HandleFunc("/search", makeHandler(SearchHandler))
+	http.HandleFunc("/query", QueryHandler)
 	http.HandleFunc("/add", addHandler)
 	http.HandleFunc("/addpage", addPage)
 	http.HandleFunc("/delete/", deleteHandler)

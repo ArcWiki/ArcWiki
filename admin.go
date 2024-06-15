@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ArcWiki/ArcWiki/db"
 	"github.com/ArcWiki/ArcWiki/menu"
 )
 
@@ -84,7 +85,7 @@ func manageCategory(userAgent string, baseURL string, w http.ResponseWriter) {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
 	}
 
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		fmt.Println("Error opening database:", err)
 		return
@@ -133,7 +134,7 @@ func managePages(userAgent string, baseURL string, w http.ResponseWriter) {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
 	}
 
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		fmt.Println("Error loading database", err)
 		return

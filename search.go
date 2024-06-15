@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ArcWiki/ArcWiki/db"
 	"github.com/ArcWiki/ArcWiki/menu"
 	"github.com/gomarkdown/markdown"
 	"github.com/houseme/mobiledetect"
@@ -43,7 +44,7 @@ type SearchData struct {
 	Size     template.HTML
 }
 
-func queryHandler(w http.ResponseWriter, r *http.Request) {
+func QueryHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Access form data from request object
 	query := r.FormValue("query")
@@ -51,7 +52,7 @@ func queryHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get all titles from the database
 
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		panic(err) // Handle errors appropriately in production
 	}
@@ -131,7 +132,7 @@ func queryHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func searchHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
+func SearchHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
 	//category := r.URL.Path[len("/title/"):]
 	if len(r.URL.Path) >= len("/title/") && r.URL.Path[:len("/title/")] == "/title/" {
 		// Path starts with "/title/" and has enough characters for slicing
@@ -146,7 +147,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request, title string, userAge
 			fmt.Println("No category specified, defaulting to normal view")
 
 			// Load the page for standard title viewing
-			p, err := loadNothing(title, userAgent)
+			p, err := LoadNothing(title, userAgent)
 			if err != nil {
 				fmt.Println("viewHandler: Something weird happened")
 				http.Redirect(w, r, "/title/Main_page", http.StatusFound)
@@ -159,7 +160,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request, title string, userAge
 	} else {
 		//fmt.Println("hello beautiful world")
 		// Load the page for standard title viewing
-		p, err := loadNothing("Main_page", userAgent)
+		p, err := LoadNothing("Main_page", userAgent)
 		if err != nil {
 			fmt.Println("viewHandler: Something weird happened")
 			//http.Redirect(w, r, "/title/Main_page", http.StatusFound)
@@ -169,7 +170,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request, title string, userAge
 	}
 
 }
-func loadNothing(title string, userAgent string) (*Page, error) {
+func LoadNothing(title string, userAgent string) (*Page, error) {
 
 	safeMenu, err := menu.Load()
 	if err != nil {
@@ -181,7 +182,7 @@ func loadNothing(title string, userAgent string) (*Page, error) {
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
 	}
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		return nil, err
 	}

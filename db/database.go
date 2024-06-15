@@ -15,18 +15,18 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package main
+package db
 
 import (
 	"database/sql"
 	"fmt"
 )
 
-func loadDatabase() (*sql.DB, error) {
+func LoadDatabase() (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", "arcWiki.db")
 	return db, err
 }
-func dbSetup() {
+func DbSetup() {
 
 	dbName := "arcWiki.db"
 	db, err := sql.Open("sqlite3", dbName)

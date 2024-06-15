@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ArcWiki/ArcWiki/db"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -34,7 +35,7 @@ func formatDateTime(t time.Time) string {
 
 func updateSubCategoryLinks() error {
 	fmt.Println("checking for subcategory links...")
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		return err
 	}
@@ -124,7 +125,7 @@ func updateSubCategoryLinks() error {
 }
 func updateCategoryLinks() error {
 	fmt.Println("checking for category links...")
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		return err
 	}

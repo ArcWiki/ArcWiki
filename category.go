@@ -28,6 +28,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/ArcWiki/ArcWiki/db"
 	"github.com/ArcWiki/ArcWiki/menu"
 )
 
@@ -42,7 +43,7 @@ type Category struct {
 
 func (p *Category) deleteCategory() error {
 
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 
 	if err != nil {
 		panic(err)
@@ -86,7 +87,7 @@ func (p *Page) saveCat() error {
 }
 func getCategoryIDByName(categoryName string) (int, error) {
 	//new
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		return 0, err
 	}
@@ -114,7 +115,7 @@ func getCategoryIDByName(categoryName string) (int, error) {
 func addCat(w http.ResponseWriter, r *http.Request) {
 	//new
 	categoryName := r.URL.Path[len("/category/"):]
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		fmt.Println("Database Error: " + err.Error())
 
@@ -146,7 +147,7 @@ func addCat(w http.ResponseWriter, r *http.Request) {
 }
 func checkCategoryExistence(categoryName string) bool {
 
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		panic(err)
 	}
@@ -216,7 +217,7 @@ func loadPageCategory(title string, categoryName string, userAgent string) (*Pag
 
 // looks for a file using the same name as the current category loaded prefixed with sub-category name it then generates the the Subcategory pages for this
 func loadLinksFromSubCategoryFile(categoryName string) []string {
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		return nil
 	}
@@ -250,7 +251,7 @@ func loadLinksFromSubCategoryFile(categoryName string) []string {
 	return matchingPages
 }
 func findPagesInCategory(categoryName string) []string {
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		return nil
 	}
@@ -366,7 +367,7 @@ func loadCategoryNoHtml(title string, userAgent string) (*EditPage, error) {
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
 	}
-	db, err := loadDatabase()
+	db, err := db.LoadDatabase()
 	if err != nil {
 		return nil, err
 	}
