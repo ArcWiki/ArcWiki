@@ -29,6 +29,11 @@ import (
 	"golang.org/x/text/language"
 )
 
+func arcWikiLogo() string {
+	return `<path style="fill:` + config.TColor + `;fill-opacity:1;stroke-width:22.5425"
+            d="m 10.418081,120.99177 4.031487,-16.99612 -8.3136961,-0.1154 11.9245121,-9.624479 8.075561,-5.697896 -6.071881,15.278315 6.163934,-0.0705 z"
+            id="path423" />`
+}
 func formatDateTime(t time.Time) string {
 	return t.Format("2 January 2006, at 15:04")
 }

@@ -206,12 +206,13 @@ func loadPageCategory(title string, categoryName string, userAgent string) (*Pag
 
 	}
 	return &Page{
-		NavTitle: config.SiteTitle,
-		CTitle:   removeUnderscores(title + ":" + categoryName),
-		Title:    title + ":" + categoryName,
-		Body:     template.HTML(subcategories + categories),
-		Size:     template.HTML(size), // Set Size to the number of matching pages
-		Menu:     template.HTML(safeMenu),
+		NavTitle:   config.SiteTitle,
+		ThemeColor: arcWikiLogo(),
+		CTitle:     removeUnderscores(title + ":" + categoryName),
+		Title:      title + ":" + categoryName,
+		Body:       template.HTML(subcategories + categories),
+		Size:       template.HTML(size), // Set Size to the number of matching pages
+		Menu:       template.HTML(safeMenu),
 	}, nil
 }
 
@@ -386,5 +387,5 @@ func loadCategoryNoHtml(title string, userAgent string) (*EditPage, error) {
 		return nil, err
 	}
 
-	return &EditPage{NavTitle: config.SiteTitle, CTitle: removeUnderscores(title), Title: title, Body: template.HTML(body), Menu: template.HTML(safeMenu), Size: template.HTML(size)}, nil
+	return &EditPage{NavTitle: config.SiteTitle, ThemeColor: arcWikiLogo(), CTitle: removeUnderscores(title), Title: title, Body: template.HTML(body), Menu: template.HTML(safeMenu), Size: template.HTML(size)}, nil
 }

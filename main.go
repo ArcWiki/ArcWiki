@@ -305,7 +305,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// Create an AddPage instance directly (no loading from file)
-		ap := &AddPage{NavTitle: config.SiteTitle, CTitle: "Add Page", Title: title, Menu: safeMenu, Size: template.HTML(size), UpdatedDate: ""}
+		ap := &AddPage{NavTitle: config.SiteTitle, ThemeColor: arcWikiLogo(), CTitle: "Add Page", Title: title, Menu: safeMenu, Size: template.HTML(size), UpdatedDate: ""}
 
 		// Populate other fields of ap as needed (e.g., from session data, user input, etc.)
 
@@ -383,12 +383,14 @@ func renderAddPageTemplate(w http.ResponseWriter, tmpl string, ap *AddPage) {
 // site wide title variable
 type Config struct {
 	SiteTitle string `json:"siteTitle"`
+	TColor    string `json:"themeColor"`
 }
 
 var config Config // Package-level variable
 
 func main() {
 	db.DbSetup()
+	config.TColor = "#6a89a5"
 
 	config.SiteTitle = os.Getenv("SITENAME")
 	if config.SiteTitle == "" {
