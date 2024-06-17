@@ -70,7 +70,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request, title string, userAgen
 			fmt.Println("error loading menu")
 		}
 
-		p := Page{NavTitle: config.SiteTitle, ThemeColor: arcWikiLogo(), CTitle: "Admin panel", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink}
+		p := Page{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: "Admin panel", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink}
 
 		// Assuming renderTemplate accepts a string for body content:
 		renderTemplate(w, "title", &p) // Pass only the body string
@@ -121,7 +121,7 @@ func manageCategory(userAgent string, baseURL string, w http.ResponseWriter) {
 		fmt.Println("error loading menu")
 	}
 
-	p := Page{NavTitle: config.SiteTitle, ThemeColor: arcWikiLogo(), CTitle: "Manage Category", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu}
+	p := Page{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: "Manage Category", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu}
 
 	renderTemplate(w, "title", &p)
 }
@@ -170,7 +170,7 @@ func managePages(userAgent string, baseURL string, w http.ResponseWriter) {
 		fmt.Println("error loading menu")
 	}
 
-	p := Page{NavTitle: config.SiteTitle, ThemeColor: arcWikiLogo(), CTitle: "Manage Pages", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu}
+	p := Page{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: "Manage Pages", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu}
 
 	renderTemplate(w, "title", &p)
 }

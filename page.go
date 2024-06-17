@@ -33,7 +33,7 @@ import (
 )
 
 type AddPage struct {
-	ThemeColor  string
+	ThemeColor  template.HTML
 	NavTitle    string
 	CTitle      string
 	Title       string
@@ -44,7 +44,7 @@ type AddPage struct {
 	UpdatedDate string
 }
 type Page struct {
-	ThemeColor   string
+	ThemeColor   template.HTML
 	NavTitle     string
 	CTitle       string
 	Title        string
@@ -56,7 +56,7 @@ type Page struct {
 }
 
 type EditPage struct {
-	ThemeColor  string
+	ThemeColor  template.HTML
 	NavTitle    string
 	CTitle      string
 	Title       string
@@ -195,12 +195,12 @@ func loadPage(title string, userAgent string) (*Page, error) {
 	//need to double check this as I'm not certain why this is
 	if err == nil { // Page found in database
 		// ... (existing code for markdown parsing and HTML generation)
-		return &Page{NavTitle: config.SiteTitle, ThemeColor: arcWikiLogo(), CTitle: removeUnderscores(title), Title: title, Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink, UpdatedDate: footer}, nil
+		return &Page{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: removeUnderscores(title), Title: title, Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink, UpdatedDate: footer}, nil
 	} else if err != sql.ErrNoRows { // Handle other SQLite errors
 		return nil, err
 	}
 
-	return &Page{NavTitle: config.SiteTitle, ThemeColor: arcWikiLogo(), CTitle: removeUnderscores(title), Title: title, Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, UpdatedDate: footer}, nil
+	return &Page{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: removeUnderscores(title), Title: title, Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, UpdatedDate: footer}, nil
 	//return nil, fmt.Errorf("File not found: %s.txt", title) // File not found in any folder
 }
 
@@ -236,7 +236,7 @@ func loadPageNoHtml(title string, userAgent string) (*EditPage, error) {
 		return nil, err
 	}
 	footer := "This page was last modified on " + formatDateTime(updated_at)
-	return &EditPage{NavTitle: config.SiteTitle, ThemeColor: arcWikiLogo(), CTitle: removeUnderscores(title), Title: title, Body: template.HTML(body), Menu: template.HTML(safeMenu), Size: template.HTML(size), UpdatedDate: footer}, nil
+	return &EditPage{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: removeUnderscores(title), Title: title, Body: template.HTML(body), Menu: template.HTML(safeMenu), Size: template.HTML(size), UpdatedDate: footer}, nil
 }
 func loadPageSpecial(title string, categoryName string, userAgent string) (*Page, error) {
 	//func loadPageSpecial(title string, categoryName string, userAgent string) (*Page, error) {
@@ -291,7 +291,7 @@ func loadPageSpecial(title string, categoryName string, userAgent string) (*Page
 		return &Page{
 
 			NavTitle:   config.SiteTitle,
-			ThemeColor: arcWikiLogo(),
+			ThemeColor: template.HTML(arcWikiLogo()),
 			CTitle:     "Special:AllCategories",
 			Title:      "Special:AllCategories",
 			Body:       template.HTML(bodyHTML),
@@ -328,7 +328,7 @@ func loadPageSpecial(title string, categoryName string, userAgent string) (*Page
 		}
 		return &Page{
 			NavTitle:   config.SiteTitle,
-			ThemeColor: arcWikiLogo(),
+			ThemeColor: template.HTML(arcWikiLogo()),
 			CTitle:     "Special:AllPages",
 			Title:      "Special:AllPages",
 			Body:       template.HTML(bodyHTML),
@@ -343,7 +343,7 @@ func loadPageSpecial(title string, categoryName string, userAgent string) (*Page
 		}
 		return &Page{
 			NavTitle:   config.SiteTitle,
-			ThemeColor: arcWikiLogo(),
+			ThemeColor: template.HTML(arcWikiLogo()),
 			Title:      "Special:AllCategories",
 			Body:       template.HTML("nothing here"),
 			Size:       template.HTML(size),

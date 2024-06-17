@@ -30,10 +30,38 @@ import (
 )
 
 func arcWikiLogo() string {
-	return `<path style="fill:` + config.TColor + `;fill-opacity:1;stroke-width:22.5425"
-            d="m 10.418081,120.99177 4.031487,-16.99612 -8.3136961,-0.1154 11.9245121,-9.624479 8.075561,-5.697896 -6.071881,15.278315 6.163934,-0.0705 z"
-            id="path423" />`
+	return `
+	<nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="border-bottom-color:` + config.TColor + `;
+	border-width: medium medium 5px;
+	border-style: none none solid;">
+	  <div class="container-fluid">
+		<a class="navbar-brand" href="#">
+		  <svg width="30" height="24" viewBox="0 0 20.092125 32.433891" version="1.1" id="svg5"
+			xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+			<defs id="defs2" />
+			<g id="layer1" transform="translate(-6.135872,-88.557874)">
+			  <path style="fill:` + config.TColor + `;fill-opacity:1;stroke-width:22.5425"
+				d="m 10.418081,120.99177 4.031487,-16.99612 -8.3136961,-0.1154 11.9245121,-9.624479 8.075561,-5.697896 -6.071881,15.278315 6.163934,-0.0705 z"
+				id="path423" />
+			</g>
+		  </svg>
+	
+	`
 }
+
+// the foundation for including iconify
+func iconifyLogo() string {
+
+	return `
+	<nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="border-bottom-color:` + config.TColor + `;
+	border-width: medium medium 5px;
+	border-style: none none solid;">
+	  <div class="container-fluid">
+		<a class="navbar-brand" href="#">
+		  <iconify-icon icon="formkit:bitcoin" width="14.9" height="24" style="display: inline-block; vertical-align: middle;"></iconify-icon>
+		  `
+}
+
 func formatDateTime(t time.Time) string {
 	return t.Format("2 January 2006, at 15:04")
 }

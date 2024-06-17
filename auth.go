@@ -94,7 +94,7 @@ func loginFormHandler(w http.ResponseWriter, r *http.Request, title string, user
 		fmt.Println("error loading menu")
 	}
 
-	p := Page{NavTitle: config.SiteTitle, ThemeColor: arcWikiLogo(), CTitle: removeUnderscores(title), Title: "login", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink}
+	p := Page{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: removeUnderscores(title), Title: "login", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink}
 
 	// Assuming renderTemplate accepts a string for body content:
 	renderTemplate(w, "login", &p) // Pass only the body string

@@ -28,3 +28,7 @@ you can specify the username or password respectively:
 you can specify sitename with SITENAME enviroment variable
 
 ``` docker run -e SITENAME="Marvel Wiki" -e USERNAME=jack -e PASSWORD=pumpkin --name arcwiki -p 8080:8080 -d spanglesontoast/arcwiki ```
+
+you can change the color of the default theme like this:
+
+``` docker run -e COLOR=#4B534E -e SITENAME="Marvel Wiki" -e USERNAME=jack -e PASSWORD=pumpkin --name arcwiki -p 8080:8080 -d spanglesontoast/arcwiki ```
