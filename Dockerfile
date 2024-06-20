@@ -6,7 +6,10 @@
 	 
 	# Copy the go.mod and go.sum files to the working directory
 	##COPY go.mod go.sum ./
-	COPY arcWiki.db assets config manifest.json templates ./
+	COPY templates ./templates
+	COPY assets ./assets
+	COPY config ./config
+	COPY arcWiki.db manifest.json  ./
 	 
 	# Download and install the Go dependencies
 	##RUN go mod download
