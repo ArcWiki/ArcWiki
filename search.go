@@ -37,11 +37,12 @@ type Result struct {
 }
 
 type SearchData struct {
-	NavTitle string
-	Menu     template.HTML
-	CTitle   string
-	Results  []Result
-	Size     template.HTML
+	ThemeColor template.HTML
+	NavTitle   string
+	Menu       template.HTML
+	CTitle     string
+	Results    []Result
+	Size       template.HTML
 }
 
 func QueryHandler(w http.ResponseWriter, r *http.Request) {
@@ -85,10 +86,11 @@ func QueryHandler(w http.ResponseWriter, r *http.Request) {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
 	}
 	var data = SearchData{
-		Size:     template.HTML(size),
-		Menu:     safeMenu,
-		NavTitle: config.SiteTitle,
-		CTitle:   "Search",
+		ThemeColor: template.HTML(arcWikiLogo()),
+		Size:       template.HTML(size),
+		Menu:       safeMenu,
+		NavTitle:   config.SiteTitle,
+		CTitle:     "Search",
 	}
 
 	for rows.Next() {
@@ -216,11 +218,11 @@ func LoadNothing(title string, userAgent string) (*Page, error) {
 	//need to double check this as I'm not certain why this is
 	if err == nil { // Page found in database
 		// ... (existing code for markdown parsing and HTML generation)
-		return &Page{NavTitle: config.SiteTitle, CTitle: "Search", Title: "title", Body: "", Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink, UpdatedDate: footer}, nil
+		return &Page{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: "Search", Title: "title", Body: "", Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink, UpdatedDate: footer}, nil
 	} else if err != sql.ErrNoRows { // Handle other SQLite errors
 		return nil, err
 	}
 
-	return &Page{NavTitle: config.SiteTitle, CTitle: "Search", Title: "title", Body: "", Size: template.HTML(size), Menu: safeMenu, UpdatedDate: "footer"}, nil
+	return &Page{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: "Search", Title: "title", Body: "", Size: template.HTML(size), Menu: safeMenu, UpdatedDate: "footer"}, nil
 	//return nil, fmt.Errorf("File not found: %s.txt", title) // File not found in any folder
 }

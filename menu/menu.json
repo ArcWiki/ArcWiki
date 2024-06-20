@@ -3,9 +3,8 @@
         {"name": "Main page", "link": "/"},
         {"name": "Random Page", "link": "/title/Special:Random"},
         {"name": "Help", "link": "/title/Category:Help"},
-        {"name": "Statistics", "link": "/"},
-        {"name": "All Pages", "link": "/title/Special:AllPages"},
-        {"name": "All Cats", "link": "/title/Special:Categories"},
+        {"name": "Pages", "link": "/title/Special:AllPages"},
+        {"name": "Categories", "link": "/title/Special:Categories"},
         {"name": "Search", "link": "/search"}
     ]
 }

@@ -399,7 +399,7 @@ func main() {
 
 	config.SiteTitle = os.Getenv("SITENAME")
 	if config.SiteTitle == "" {
-		data, err := os.ReadFile("config.json")
+		data, err := os.ReadFile("config/config.json")
 		if err != nil {
 			panic(err) // Handle the error appropriately in production
 		}

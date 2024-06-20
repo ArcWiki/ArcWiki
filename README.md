@@ -13,7 +13,7 @@
 
 ## Usage
 Can be used as selfhosted personal wiki for the moment can be used with or without docker. 
-Auth is simple and dangerous see admin.json.
+Auth is simple and dangerous see in config/admin.json.
 
 ## Docker Instructions
 
