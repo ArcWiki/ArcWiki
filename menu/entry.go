@@ -25,7 +25,7 @@ import (
 )
 
 func Load() (template.HTML, error) {
-	file, err := os.Open("menu/menu.json")
+	file, err := os.Open("config/menu.json")
 	if err != nil {
 		fmt.Println("Error Loading menu: " + err.Error())
 

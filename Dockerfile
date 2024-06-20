@@ -5,15 +5,16 @@
 	WORKDIR /app
 	 
 	# Copy the go.mod and go.sum files to the working directory
-	COPY go.mod go.sum ./
+	##COPY go.mod go.sum ./
+	COPY arcWiki.db assets config manifest.json templates ./
 	 
 	# Download and install the Go dependencies
-	RUN go mod download
+	##RUN go mod download
 	 
 	# Copy the rest of the application source code to the working directory
-	COPY . .
+	COPY tmp/arcWiki ./
 	# Build the Go application
-	RUN go build -o arcwiki
+	##RUN go build -o arcwiki
 
 	# Set environment variables for configuration
 	ENV PORT=8080
