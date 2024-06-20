@@ -12,7 +12,7 @@
 	##RUN go mod download
 	 
 	# Copy the rest of the application source code to the working directory
-	COPY tmp/arcWiki ./
+	COPY /tmp/arcWiki ./
 	# Build the Go application
 	##RUN go build -o arcwiki
 
