@@ -1,0 +1,37 @@
+{
+    "admin": [
+      {
+        "username": "admin",
+        "password": "password"  
+      }
+    ],
+    "siteTitle": "ArcW2iki",
+    "TColor": "#6a89a5",
+    "menu": [
+      {
+        "name": "Main page",
+        "link": "/"
+      },
+      {
+        "name": "Random Page",
+        "link": "/title/Special:Random"
+      },
+      {
+        "name": "Help",
+        "link": "/title/Category:Help"
+      },
+      {
+        "name": "Pages",
+        "link": "/title/Special:AllPages"
+      },
+      {
+        "name": "Categories",
+        "link": "/title/Special:Categories"
+      },
+      {
+        "name": "Search",
+        "link": "/search"
+      }
+    ]
+  }
+  

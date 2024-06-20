@@ -140,7 +140,7 @@ func loadAdmin() (string, string) {
 		return username, password // Return credentials if found
 	} else {
 
-		file, err := os.Open("admin.json")
+		file, err := os.Open("config/admin.json")
 		if err != nil {
 			fmt.Println("Loading Admin Settings Failed: ")
 			fmt.Println(err)

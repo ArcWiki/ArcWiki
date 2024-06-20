@@ -380,41 +380,51 @@ func renderAddPageTemplate(w http.ResponseWriter, tmpl string, ap *AddPage) {
 	}
 }
 
-// site wide title variable
 type Config struct {
-	SiteTitle string `json:"siteTitle"`
-	TColor    string `json:"themeColor"`
+	Admin     []Admin    `json:"admin"`
+	SiteTitle string     `json:"siteTitle"`
+	TColor    string     `json:"TColor"`
+	Menu      []MenuItem `json:"menu"`
+}
+
+type Admin struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type MenuItem struct {
+	Name string `json:"name"`
+	Link string `json:"link"`
 }
 
 var config Config // Package-level variable
+// // site wide title variable
+// type Config struct {
+// 	SiteTitle string `json:"siteTitle"`
+//
+// }
 
 func main() {
 	db.DbSetup()
 
-	config.TColor = os.Getenv("COLOR")
-	if config.TColor == "" {
-		config.TColor = "#6a89a5"
-
+	configBytes, err := os.ReadFile("config/mconfig.json")
+	if err != nil {
+		panic(err)
 	}
 
-	config.SiteTitle = os.Getenv("SITENAME")
-	if config.SiteTitle == "" {
-		data, err := os.ReadFile("config/config.json")
-		if err != nil {
-			panic(err) // Handle the error appropriately in production
-		}
-
-		// Unmarshal the JSON data
-
-		err = json.Unmarshal(data, &config)
-		if err != nil {
-			panic(err) // Handle the error appropriately in production
-		}
-
+	err = json.Unmarshal(configBytes, &config)
+	if err != nil {
+		panic(err)
 	}
 
-	// Access the extracted value
-	fmt.Println("Site Title:", config.SiteTitle)
+	if os.Getenv("COLOR") != "" {
+		config.TColor = os.Getenv("COLOR")
+	}
+	if os.Getenv("SITENAME") != "" {
+		config.SiteTitle = os.Getenv("SITENAME")
+	}
+
+	fmt.Println("Starting your instance of ArcWiki called:", config.SiteTitle)
 	go func() {
 		for {
 			if err := updateCategoryLinks(); err != nil {
