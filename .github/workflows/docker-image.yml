@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: alpine:latest
+    runs-on: alpine:3.20.1
     steps:
       - uses: actions/checkout@v3
       - name: Login to Docker Hub (replace with your registry)
