@@ -1,5 +1,5 @@
 	# Use the official Golang image as the base image
-	FROM alpine:latest 
+	FROM ubuntu:latest
 	 
 	# Set the working directory inside the container
 	WORKDIR /app
