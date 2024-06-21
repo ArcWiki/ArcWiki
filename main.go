@@ -397,7 +397,8 @@ type MenuItem struct {
 	Link string `json:"link"`
 }
 
-var config Config // Package-level variable
+var config Config
+
 // // site wide title variable
 // type Config struct {
 // 	SiteTitle string `json:"siteTitle"`
@@ -423,7 +424,7 @@ func main() {
 	if os.Getenv("SITENAME") != "" {
 		config.SiteTitle = os.Getenv("SITENAME")
 	}
-
+	fmt.Println(config.Admin[0].Username)
 	fmt.Println("Starting your instance of ArcWiki called:", config.SiteTitle)
 	go func() {
 		for {

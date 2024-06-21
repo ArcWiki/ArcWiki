@@ -18,7 +18,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -139,33 +138,9 @@ func loadAdmin() (string, string) {
 	if username != "" && password != "" {
 		return username, password // Return credentials if found
 	} else {
-
-		file, err := os.Open("config/admin.json")
-		if err != nil {
-			fmt.Println("Loading Admin Settings Failed: ")
-			fmt.Println(err)
-		}
-		defer file.Close()
-
-		// Decode the JSON data
-		var data map[string]interface{}
-		err = json.NewDecoder(file).Decode(&data)
-		if err != nil {
-			fmt.Println("error happened")
-		}
-
-		menuItems := data["admin"].([]interface{})
-
-		// Create the list of links
-		username := ""
-		password := ""
-		for _, item := range menuItems {
-			linkData := item.(map[string]interface{})
-			username = linkData["username"].(string)
-			password = linkData["password"].(string)
-
-		}
-
-		return username, password
+		username = config.Admin[0].Username
+		password = config.Admin[0].Password
 	}
+	return username, password
+
 }
