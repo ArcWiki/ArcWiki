@@ -241,53 +241,52 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string, string)) ht
 }
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract the resource type and title using strings.SplitN
-	parts := strings.SplitN(strings.TrimPrefix(r.URL.Path, "/delete/"), "/", 2)
-	if len(parts) != 2 {
-		http.Error(w, "Invalid URL format", http.StatusBadRequest)
-		return
-	}
-	resourceType := parts[0]
-	title := parts[1]
 
-	// Handle deletion based on resource type
-	if resourceType == "page" {
-		// Handle deletion of a page
-		p := &Page{Title: title}
-		err := p.deletePage()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		http.Redirect(w, r, "/admin/manage", http.StatusFound)
-	} else if resourceType == "category" {
-		// Handle deletion of a category
-		cat := &Category{Title: title}
-		err := cat.deleteCategory()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		http.Redirect(w, r, "/admin/manage", http.StatusFound)
-	} else {
-		// Handle invalid resource type
-		//http.Error(w, "Invalid resource type", http.StatusBadRequest)
+	session, _ := store.Get(r, "cookie-name")
+	auth, ok := session.Values["authenticated"].(bool)
+
+	if !ok || !auth {
+		//http.Error(w, "Forbidden", http.StatusForbidden)
 		http.Redirect(w, r, "/error", http.StatusFound)
+		return
+	} else {
+		parts := strings.SplitN(strings.TrimPrefix(r.URL.Path, "/delete/"), "/", 2)
+		if len(parts) != 2 {
+			http.Error(w, "Invalid URL format", http.StatusBadRequest)
+			return
+		}
+		resourceType := parts[0]
+		title := parts[1]
+
+		// Handle deletion based on resource type
+		if resourceType == "page" {
+			// Handle deletion of a page
+			p := &Page{Title: title}
+			err := p.deletePage()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			http.Redirect(w, r, "/admin/manage", http.StatusFound)
+		} else if resourceType == "category" {
+			// Handle deletion of a category
+			cat := &Category{Title: title}
+			err := cat.deleteCategory()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			http.Redirect(w, r, "/admin/manage", http.StatusFound)
+		} else {
+			// Handle invalid resource type
+			//http.Error(w, "Invalid resource type", http.StatusBadRequest)
+			http.Redirect(w, r, "/error", http.StatusFound)
+		}
 	}
 }
 
 func addHandler(w http.ResponseWriter, r *http.Request) {
 	// check our user is logged in
-
-	detect := mobiledetect.New(r, nil)
-	size := ""
-	if detect.IsMobile() || detect.IsTablet() {
-		fmt.Println("is either a mobile or tablet")
-
-		size = "<div class=\"col-12 d-block d-sm-none\">"
-	} else {
-		size = "<div class=\"col-11 d-none d-sm-block\">"
-	}
-
 	session, _ := store.Get(r, "cookie-name")
 	auth, ok := session.Values["authenticated"].(bool)
 
@@ -296,6 +295,15 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 		//http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	} else {
+		detect := mobiledetect.New(r, nil)
+		size := ""
+		if detect.IsMobile() || detect.IsTablet() {
+			fmt.Println("is either a mobile or tablet")
+
+			size = "<div class=\"col-12 d-block d-sm-none\">"
+		} else {
+			size = "<div class=\"col-11 d-none d-sm-block\">"
+		}
 
 		title := ""
 		safeMenu, err := menu.Load()
@@ -384,6 +392,7 @@ type Config struct {
 	Admin     []Admin    `json:"admin"`
 	SiteTitle string     `json:"siteTitle"`
 	TColor    string     `json:"TColor"`
+	SecretKey string     `json:"secretKey"`
 	Menu      []MenuItem `json:"menu"`
 }
 

@@ -34,20 +34,6 @@ var (
 	store = sessions.NewCookieStore(key)
 )
 
-//showing how to login
-// func secret(w http.ResponseWriter, r *http.Request) {
-// 	session, _ := store.Get(r, "cookie-name")
-
-// 	// Check if user is authenticated
-// 	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
-// 		http.Error(w, "Forbidden", http.StatusForbidden)
-// 		return
-// 	}
-
-// 	// Print secret message
-// 	fmt.Fprintln(w, "The cake is a lie!")
-// }
-
 func loginFormHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
 	size := ""
 	if userAgent == "desktop" {

@@ -213,8 +213,8 @@ func updateCategoryLinks() error {
 	for _, page := range pagesToUpdate {
 
 		// Batch delete existing links for the page
-		fmt.Println("debuger")
-		fmt.Println("Struct pageID:", page.pageID)
+		////fmt.Println("debugger")
+		////fmt.Println("Struct pageID:", page.pageID)
 		_, err = tx.Exec("DELETE FROM CategoryPages WHERE page_id = ?", page.pageID)
 		if err != nil {
 			return err
