@@ -29,7 +29,6 @@ import (
 	"time"
 
 	"github.com/ArcWiki/ArcWiki/db"
-	"github.com/ArcWiki/ArcWiki/menu"
 
 	"github.com/houseme/mobiledetect"
 	_ "github.com/mattn/go-sqlite3"
@@ -306,7 +305,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		title := ""
-		safeMenu, err := menu.Load()
+		safeMenu, err := loadMenu()
 		if err != nil {
 			log.Println("Error loading menu:", err)
 			// Handle the error, e.g., display a user-friendly message
@@ -408,6 +407,16 @@ type MenuItem struct {
 
 var config Config
 
+func loadMenu() (template.HTML, error) {
+	var links strings.Builder
+
+	for _, menuItem := range config.Menu {
+		links.WriteString(fmt.Sprintf("<li><a href=\"%s\">%s</a></li>\n", menuItem.Link, menuItem.Name))
+	}
+
+	return template.HTML(links.String()), nil
+}
+
 // // site wide title variable
 // type Config struct {
 // 	SiteTitle string `json:"siteTitle"`
@@ -417,7 +426,7 @@ var config Config
 func main() {
 	db.DbSetup()
 
-	configBytes, err := os.ReadFile("config/mconfig.json")
+	configBytes, err := os.ReadFile("config/config.json")
 	if err != nil {
 		panic(err)
 	}

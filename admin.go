@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"github.com/ArcWiki/ArcWiki/db"
-	"github.com/ArcWiki/ArcWiki/menu"
 )
 
 func adminHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
@@ -65,7 +64,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request, title string, userAgen
 		internalLinks := convertLinksToAnchors(perfecthtml)
 		safeBodyHTML := template.HTML(internalLinks)
 		//load menu
-		safeMenu, err := menu.Load()
+		safeMenu, err := loadMenu()
 		if err != nil {
 			fmt.Println("error loading menu")
 		}
@@ -116,7 +115,7 @@ func manageCategory(userAgent string, baseURL string, w http.ResponseWriter) {
 
 	safeBodyHTML := template.HTML(bodyHTML)
 
-	safeMenu, err := menu.Load()
+	safeMenu, err := loadMenu()
 	if err != nil {
 		fmt.Println("error loading menu")
 	}
@@ -165,7 +164,7 @@ func managePages(userAgent string, baseURL string, w http.ResponseWriter) {
 
 	safeBodyHTML := template.HTML(bodyHTML)
 
-	safeMenu, err := menu.Load()
+	safeMenu, err := loadMenu()
 	if err != nil {
 		fmt.Println("error loading menu")
 	}

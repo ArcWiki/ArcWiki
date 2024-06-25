@@ -23,8 +23,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ArcWiki/ArcWiki/menu"
-
 	"github.com/gorilla/sessions"
 )
 
@@ -74,7 +72,7 @@ func loginFormHandler(w http.ResponseWriter, r *http.Request, title string, user
 	internalLinks := convertLinksToAnchors(perfecthtml)
 	safeBodyHTML := template.HTML(internalLinks)
 	//load menu
-	safeMenu, err := menu.Load()
+	safeMenu, err := loadMenu()
 	if err != nil {
 		fmt.Println("error loading menu")
 	}
