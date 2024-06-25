@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -43,6 +44,7 @@ type AddPage struct {
 	UpdatedDate string
 }
 type Page struct {
+	ID           int
 	ThemeColor   template.HTML
 	NavTitle     string
 	CTitle       string
@@ -66,35 +68,159 @@ type EditPage struct {
 }
 
 func (p *Page) save() error {
-	fmt.Println("the page saved was called " + p.CTitle)
+	fmt.Println("the page saved was called " + p.Title)
 	db, err := db.LoadDatabase()
 	if err != nil {
 		return fmt.Errorf("error loading database: %w", err) // Return a descriptive error
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare("UPDATE Pages SET title = ?, body = ?, updated_at = CURRENT_TIMESTAMP WHERE title = ?")
+	tx, err := db.Begin() // Start transaction
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %w", err)
+	}
+	defer func() {
+		if err != nil { // Rollback on any error
+			_ = tx.Rollback()
+		}
+	}()
+
+	stmt, err := tx.Prepare("UPDATE Pages SET title = ?, body = ?, updated_at = CURRENT_TIMESTAMP WHERE title = ?")
 	if err != nil {
 		return fmt.Errorf("error preparing statement: %w", err)
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(canonicalizeTitle(p.Title), string(p.Body), p.CTitle) // Ignore RowsAffected
+	_, err = stmt.Exec(canonicalizeTitle(p.Title), string(p.Body), p.Title) // Ignore RowsAffected
 	if err != nil {
 		return fmt.Errorf("error executing update: %w", err)
+	}
+
+	// Prepare a list of category IDs to insert based on match[1]
+	var categoryIDsToInsert []int
+	regex := regexp.MustCompile(`\[Category:([^\]|]*)\]`)
+	matches := regex.FindAllStringSubmatch(string(p.Body), -1) // Find all matches
+
+	// Check if the page exists before fetching ID
+	var pageID int
+	// Check if the page exists before fetching ID
+	row := tx.QueryRow("SELECT id FROM Pages WHERE title = ?", p.Title)
+	err = row.Scan(&pageID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			fmt.Println("page with title", p.Title+" not found") // Informative error
+		}
+		fmt.Println("error checking for existing page:", err)
+	}
+	_, err = tx.Exec("DELETE FROM CategoryPages WHERE page_id = ?", pageID)
+	if err != nil {
+		fmt.Println("Error deleting existing category links:", err)
+		// Consider returning an error or logging the error and continuing
+	}
+	for _, matchedCategory := range matches {
+		var categoryID int
+		err := tx.QueryRow("SELECT id FROM Categories WHERE title = ?", matchedCategory[1]).Scan(&categoryID)
+		if err != nil {
+			fmt.Println("Error fetching category ID:", err)
+			continue // Skip to next category if error occurs
+		}
+		categoryIDsToInsert = append(categoryIDsToInsert, categoryID)
+	}
+
+	// Batch insert new category links (adjusted for current page only)
+	for _, categoryID := range categoryIDsToInsert {
+
+		_, err = tx.Exec("INSERT INTO CategoryPages (page_id, category_id) VALUES (?, ?)", pageID, categoryID)
+		fmt.Println("Inserting Category links", pageID, categoryID)
+		if err != nil {
+			fmt.Println(err)
+			_ = tx.Rollback() // Explicit rollback on error
+
+			fmt.Println("error inserting category link:", err)
+		}
+	}
+
+	// Commit the transaction only once after successful insertions
+	err = tx.Commit()
+	if err != nil {
+		fmt.Println("error committing transaction:", err)
 	}
 
 	fmt.Println("Updated page with title:", canonicalizeTitle(p.Title)) // Clearer message
 	return nil
 }
+
 func addPage(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	title := r.FormValue("title")
 	if title != "index" {
 		body := r.FormValue("body")
+		// We Fix make the category links straight away more dev here
+		regex := regexp.MustCompile(`\[Category:([^\]|]*)\]`)
+		matches := regex.FindAllStringSubmatch(body, -1) // Find all matches
 
 		freshTitle := canonicalizeTitle(title)
-		dbsql("INSERT INTO Pages (title, body, user_id, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", freshTitle, body, 1)
+
+		db, err := db.LoadDatabase()
+		if err != nil {
+			fmt.Println("Database Error: " + err.Error())
+			return // Handle error
+		}
+
+		stmt := `INSERT INTO Pages (title, body, user_id, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); SELECT last_insert_rowid();`
+
+		tx, err := db.Begin()
+		if err != nil {
+			fmt.Println(err)
+			return // Handle error
+		}
+		defer tx.Rollback() // Rollback if any error occurs
+
+		result, err := tx.Exec(stmt, freshTitle, body, 1)
+		if err != nil {
+			fmt.Println(err)
+			_ = tx.Rollback() // rollback if error occurs
+			return            // Handle error
+		}
+
+		var pageID int64
+		pageID, err = result.LastInsertId()
+		fmt.Println("page id is this : ", pageID)
+		if err != nil {
+			fmt.Println(err)
+			_ = tx.Rollback() // Explicitly rollback if error occurs
+			return            // Handle error
+		}
+
+		// Prepare a list of category IDs to insert based on match[1]
+		var categoryIDsToInsert []int
+		for _, matchedCategory := range matches {
+			var categoryID int
+			err := tx.QueryRow("SELECT id FROM Categories WHERE title = ?", matchedCategory[1]).Scan(&categoryID)
+			if err != nil { // Handle potential error fetching category ID
+				fmt.Println("Error fetching category ID:", err)
+				continue // Skip to next category if error occurs
+			}
+			categoryIDsToInsert = append(categoryIDsToInsert, categoryID)
+		}
+
+		// Batch insert new category links (adjusted for current page only)
+		for _, categoryID := range categoryIDsToInsert {
+			_, err = tx.Exec("INSERT INTO CategoryPages (page_id, category_id) VALUES (?, ?)", pageID, categoryID)
+			fmt.Println("Inserting Category links" + string(pageID) + " " + string(categoryID))
+			if err != nil {
+				fmt.Println(err)
+				_ = tx.Rollback() // Explicitly
+				return            // Handle error
+			}
+		}
+
+		// Commit the transaction only once after successful insertions
+		err = tx.Commit()
+		if err != nil {
+			fmt.Println(err)
+			return // Handle error
+		}
 
 		http.Redirect(w, r, "/title/"+freshTitle, http.StatusFound)
 	} else {
@@ -104,35 +230,63 @@ func addPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Page) deletePage() error {
-
 	db, err := db.LoadDatabase()
-
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error loading database: %w", err) // Return a descriptive error
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare("DELETE FROM Pages WHERE title = ?")
+	tx, err := db.Begin() // Start transaction
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error starting transaction: %w", err)
 	}
-	defer stmt.Close()
+	defer func() {
+		if err != nil { // Rollback on any error
+			_ = tx.Rollback()
+		}
+	}()
+	var pageID int
+	// Check if the page exists before deleting
+	row := tx.QueryRow("SELECT id FROM Pages WHERE title = ?", p.Title)
+	// Placeholder variable to eliminate unnecessary scan
+	err = row.Scan(&pageID)
 
-	result, err := stmt.Exec(p.Title)
 	if err != nil {
-		panic(err)
+		if err == sql.ErrNoRows {
+			fmt.Println("page with title", p.Title+" not found") // Informative error
+		}
+		fmt.Println("error checking for existing page: %w", err)
+	}
+
+	// Delete category links first (assuming foreign key constraints exist)
+	_, err = tx.Exec("DELETE FROM CategoryPages WHERE page_id = ?", pageID) // Use title for efficiency (assuming unique constraint)
+	if err != nil {
+		fmt.Println("Error deleting category links:", err)
+		// Consider logging the error and continuing with page deletion (optional)
+	}
+
+	// Delete the page
+	result, err := tx.Exec("DELETE FROM Pages WHERE title = ?", p.Title)
+	if err != nil {
+		fmt.Println("error deleting page:", err)
 	}
 
 	rowsDeleted, err := result.RowsAffected()
 	if err != nil {
-		panic(err)
+		fmt.Println("error checking rows affected:", err)
 	}
 
 	if rowsDeleted > 0 {
-		fmt.Println("Deleted", rowsDeleted, "category with title:", p.Title)
+		fmt.Println("Deleted page with title:", p.Title)
 	} else {
-		fmt.Println("No category found with title:", p.Title)
+		fmt.Println("No page found with title:", p.Title) // May indicate a race condition
 	}
+
+	err = tx.Commit() // Commit the transaction
+	if err != nil {
+		fmt.Println("error committing transaction:", err)
+	}
+
 	return nil
 }
 
@@ -237,7 +391,7 @@ func loadPageNoHtml(title string, userAgent string) (*EditPage, error) {
 	footer := "This page was last modified on " + formatDateTime(updated_at)
 	return &EditPage{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: removeUnderscores(title), Title: title, Body: template.HTML(body), Menu: template.HTML(safeMenu), Size: template.HTML(size), UpdatedDate: footer}, nil
 }
-func loadPageSpecial(title string, categoryName string, userAgent string) (*Page, error) {
+func loadPageSpecial(categoryName string, userAgent string) (*Page, error) {
 	//func loadPageSpecial(title string, categoryName string, userAgent string) (*Page, error) {
 	//size := "w-full max-w-7xl mx-auto px-4 py-8"
 

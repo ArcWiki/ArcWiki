@@ -86,7 +86,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 			specialPageName = strings.TrimSpace(specialPageName)
 			fmt.Println("Special page accessed:", specialPageName)
 
-			p, err := loadPageSpecial(title, specialPageName, userAgent)
+			p, err := loadPageSpecial(specialPageName, userAgent)
 			if err != nil {
 				fmt.Println("Error Occured in:", specialPageName)
 				//http.Redirect(w, r, "/edit/"+title, http.StatusFound)
@@ -330,7 +330,7 @@ func errorPage(w http.ResponseWriter, r *http.Request) {
 	} else {
 		userAgent = "desktop"
 	}
-	p, err := loadPageSpecial("Error", "specialPageName", userAgent)
+	p, err := loadPageSpecial("specialPageName", userAgent)
 	if err != nil {
 		http.Error(w, "Error loading HTML file", http.StatusInternalServerError)
 		return
@@ -417,12 +417,6 @@ func loadMenu() (template.HTML, error) {
 	return template.HTML(links.String()), nil
 }
 
-// // site wide title variable
-// type Config struct {
-// 	SiteTitle string `json:"siteTitle"`
-//
-// }
-
 func main() {
 	db.DbSetup()
 
@@ -446,16 +440,12 @@ func main() {
 	fmt.Println("Starting your instance of ArcWiki called:", config.SiteTitle)
 	go func() {
 		for {
-			if err := updateCategoryLinks(); err != nil {
-				// Handle error
-				fmt.Println("Error updating categories:", err)
-			}
-			time.Sleep(20 * time.Second)
+
 			if err := updateSubCategoryLinks(); err != nil {
 				// Handle error
 				fmt.Println("Error updating subcategories:", err)
 			}
-			time.Sleep(20 * time.Second)
+			time.Sleep(60 * time.Second)
 		}
 	}()
 
