@@ -68,7 +68,7 @@ type EditPage struct {
 }
 
 func (p *Page) save() error {
-	fmt.Println("the page saved was called " + p.Title)
+	fmt.Println("the page saved was called " + canonicalizeTitle(p.Title))
 	db, err := db.LoadDatabase()
 	if err != nil {
 		return fmt.Errorf("error loading database: %w", err) // Return a descriptive error
@@ -91,7 +91,7 @@ func (p *Page) save() error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(canonicalizeTitle(p.Title), string(p.Body), p.Title) // Ignore RowsAffected
+	_, err = stmt.Exec(canonicalizeTitle(p.Title), string(p.Body), canonicalizeTitle(p.Title)) // Ignore RowsAffected
 	if err != nil {
 		return fmt.Errorf("error executing update: %w", err)
 	}
@@ -104,11 +104,11 @@ func (p *Page) save() error {
 	// Check if the page exists before fetching ID
 	var pageID int
 	// Check if the page exists before fetching ID
-	row := tx.QueryRow("SELECT id FROM Pages WHERE title = ?", p.Title)
+	row := tx.QueryRow("SELECT id FROM Pages WHERE title = ?", canonicalizeTitle(p.Title))
 	err = row.Scan(&pageID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			fmt.Println("page with title", p.Title+" not found") // Informative error
+			fmt.Println("page with title", canonicalizeTitle(p.Title)+" not found") // Informative error
 		}
 		fmt.Println("error checking for existing page:", err)
 	}
@@ -247,13 +247,13 @@ func (p *Page) deletePage() error {
 	}()
 	var pageID int
 	// Check if the page exists before deleting
-	row := tx.QueryRow("SELECT id FROM Pages WHERE title = ?", p.Title)
+	row := tx.QueryRow("SELECT id FROM Pages WHERE title = ?", canonicalizeTitle(p.Title))
 	// Placeholder variable to eliminate unnecessary scan
 	err = row.Scan(&pageID)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			fmt.Println("page with title", p.Title+" not found") // Informative error
+			fmt.Println("page with title", canonicalizeTitle(p.Title)+" not found") // Informative error
 		}
 		fmt.Println("error checking for existing page: %w", err)
 	}
@@ -266,7 +266,7 @@ func (p *Page) deletePage() error {
 	}
 
 	// Delete the page
-	result, err := tx.Exec("DELETE FROM Pages WHERE title = ?", p.Title)
+	result, err := tx.Exec("DELETE FROM Pages WHERE title = ?", canonicalizeTitle(p.Title))
 	if err != nil {
 		fmt.Println("error deleting page:", err)
 	}
@@ -277,9 +277,9 @@ func (p *Page) deletePage() error {
 	}
 
 	if rowsDeleted > 0 {
-		fmt.Println("Deleted page with title:", p.Title)
+		fmt.Println("Deleted page with title:", canonicalizeTitle(p.Title))
 	} else {
-		fmt.Println("No page found with title:", p.Title) // May indicate a race condition
+		fmt.Println("No page found with title:", canonicalizeTitle(p.Title)) // May indicate a race condition
 	}
 
 	err = tx.Commit() // Commit the transaction
