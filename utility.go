@@ -338,7 +338,7 @@ func removeUnderscores(s string) string {
 // updates headings with styling
 func parseWikiText(wikiText string) string {
 
-	regex_patterns := map[string]string{
+	regexPatterns := map[string]string{
 		"h1": `(?m)^(<h1(.+?)>)(.+?)(<\/h1>)`, // Then process h1
 		"h2": `(?m)^(<h2(.+?)>)(.+?)(<\/h2>)`, // Process h2 first
 		"h3": `(?m)^(<h3(.+?)>)(.+?)(<\/h3>)`, // Process h2 first
@@ -355,8 +355,8 @@ func parseWikiText(wikiText string) string {
 
 	parsedText := wikiText
 
-	for level, regex_pattern := range regex_patterns {
-		re := regexp.MustCompile(regex_pattern)
+	for level, regexPat := range regexPatterns {
+		re := regexp.MustCompile(regexPat)
 		parsedText = re.ReplaceAllStringFunc(parsedText, func(match string) string {
 			// make sure we use match and look at group 2
 			// headingText := match[2 : len(match)-len(level)]

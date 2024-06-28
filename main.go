@@ -34,6 +34,9 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+const Desktop = "desktop"
+const Mobile = "mobile"
+
 func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
 	//.stats.getStats()
 	//category := r.URL.Path[len("/title/"):]
@@ -67,14 +70,26 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 			defer db.Close()
 
 			// Fetch a random page title from the Pages table
+			// Fetch a random page title from the Pages table securely
 			var title string
-			row := db.QueryRow("SELECT title FROM Pages ORDER BY RANDOM() LIMIT 1") // Select only the title
-			err = row.Scan(&title)
+			stmt, err := db.Prepare("SELECT title FROM Pages ORDER BY RANDOM() LIMIT 1")
 			if err != nil {
-				fmt.Println("Error occurred in Random Page:", err)
-				//http.Redirect(w, r, "/edit/"+title, http.StatusFound)
+				fmt.Println("Error preparing statement:", err)
 				return
 			}
+			defer stmt.Close() // Close the statement after use
+
+			row := stmt.QueryRow()
+			err = row.Scan(&title)
+			if err != nil {
+
+				fmt.Println("No pages found in database")
+
+				return
+			}
+
+			// Use the retrieved title securely
+			fmt.Println("Random Page Title:", title) // Or use the title for your purpose
 
 			http.Redirect(w, r, "/title/"+title, http.StatusFound) // Redirect to the randomly selected page
 
@@ -140,7 +155,7 @@ func editHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 	updated_at := "Not Available"
 	fmt.Println(title)
 	size := ""
-	if userAgent == "desktop" {
+	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
@@ -218,9 +233,9 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string, string)) ht
 		userAgent := ""
 		if detect.IsMobile() || detect.IsTablet() {
 			fmt.Println("is either a mobile or tablet")
-			userAgent = "mobile"
+			userAgent = Mobile
 		} else {
-			userAgent = "desktop"
+			userAgent = Desktop
 		}
 
 		//userAgent := requestHeaders.Get("User-Agent")
@@ -326,9 +341,9 @@ func errorPage(w http.ResponseWriter, r *http.Request) {
 	userAgent := ""
 	if detect.IsMobile() || detect.IsTablet() {
 		fmt.Println("is either a mobile or tablet")
-		userAgent = "mobile"
+		userAgent = Mobile
 	} else {
-		userAgent = "desktop"
+		userAgent = Desktop
 	}
 	p, err := loadPageSpecial("specialPageName", userAgent)
 	if err != nil {
@@ -418,7 +433,7 @@ func loadMenu() (template.HTML, error) {
 }
 
 func main() {
-	db.DbSetup()
+	db.DBSetup()
 
 	configBytes, err := os.ReadFile("config/config.json")
 	if err != nil {

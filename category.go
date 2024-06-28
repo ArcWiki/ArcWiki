@@ -41,7 +41,6 @@ type Category struct {
 }
 
 func (p *Category) deleteCategory() error {
-
 	db, err := db.LoadDatabase()
 
 	if err != nil {
@@ -174,7 +173,7 @@ func checkCategoryExistence(categoryName string) bool {
 // displays categories and sub-categories on the Category:somename page
 func loadPageCategory(title string, categoryName string, userAgent string) (*Page, error) {
 	size := ""
-	if userAgent == "desktop" {
+	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
@@ -362,7 +361,7 @@ func loadCategoryNoHtml(title string, userAgent string) (*EditPage, error) {
 	if err != nil {
 		return nil, err
 	}
-	if userAgent == "desktop" {
+	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"

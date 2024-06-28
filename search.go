@@ -75,11 +75,11 @@ func QueryHandler(w http.ResponseWriter, r *http.Request) {
 
 	if detect.IsMobile() || detect.IsTablet() {
 		fmt.Println("is either a mobile or tablet")
-		userAgent = "mobile"
+		userAgent = Mobile
 	} else {
-		userAgent = "desktop"
+		userAgent = Desktop
 	}
-	if userAgent == "desktop" {
+	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
@@ -178,7 +178,7 @@ func LoadNothing(title string, userAgent string) (*Page, error) {
 		return nil, err
 	}
 	size := ""
-	if userAgent == "desktop" {
+	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"

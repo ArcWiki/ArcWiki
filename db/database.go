@@ -26,8 +26,7 @@ func LoadDatabase() (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", "arcWiki.db")
 	return db, err
 }
-func DbSetup() {
-
+func DBSetup() {
 	dbName := "arcWiki.db"
 	db, err := sql.Open("sqlite3", dbName)
 	if err != nil {
@@ -130,18 +129,20 @@ func DbSetup() {
 			} else {
 				fmt.Println("Installed value updated successfully")
 			}
-			_, err = db.Exec(`INSERT INTO Pages (title, body, user_id, created_at, updated_at) VALUES (?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`, "Main_page", "## Welcome to ArcWiki\n let the games begin")
+			_, err = db.Exec(`INSERT INTO Pages (title, body, user_id, created_at, updated_at) VALUES 
+			(?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`, "Main_page", "## Welcome to ArcWiki\n let the games begin")
 
 			if err != nil {
 				fmt.Println("Error inserting into pages value:", err)
 				return
 			} else {
 				fmt.Println("Installed value updated successfully")
+
 			}
-			//fmt.Println("Tables created successfully!")
+			// fmt.Println("Tables created successfully!")
 			// }
 			defer db.Close()
-			//fmt.Println("Database opened successfully!")
+			// fmt.Println("Database opened successfully!")
 		} else {
 			fmt.Println("it's already installed please delete the database if you wish for a fresh install")
 		}

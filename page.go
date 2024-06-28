@@ -309,7 +309,7 @@ func loadPage(title string, userAgent string) (*Page, error) {
 		return nil, err
 	}
 	size := ""
-	if userAgent == "desktop" {
+	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
@@ -365,7 +365,7 @@ func loadPageNoHtml(title string, userAgent string) (*EditPage, error) {
 	if err != nil {
 		return nil, err
 	}
-	if userAgent == "desktop" {
+	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
@@ -396,7 +396,7 @@ func loadPageSpecial(categoryName string, userAgent string) (*Page, error) {
 	//size := "w-full max-w-7xl mx-auto px-4 py-8"
 
 	size := ""
-	if userAgent == "desktop" {
+	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"

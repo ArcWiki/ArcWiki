@@ -34,7 +34,7 @@ var (
 
 func loginFormHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
 	size := ""
-	if userAgent == "desktop" {
+	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"

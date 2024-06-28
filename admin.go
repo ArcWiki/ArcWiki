@@ -35,7 +35,8 @@ func adminHandler(w http.ResponseWriter, r *http.Request, title string, userAgen
 		manageCategory(userAgent, baseURL, w)
 	} else {
 		size := ""
-		if userAgent == "desktop" {
+
+		if userAgent == Desktop {
 			size = "<div class=\"col-11 d-none d-sm-block\">"
 		} else {
 			size = "<div class=\"col-12 d-block d-sm-none\">"
@@ -78,7 +79,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request, title string, userAgen
 }
 func manageCategory(userAgent string, baseURL string, w http.ResponseWriter) {
 	size := ""
-	if userAgent == "desktop" {
+	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
@@ -127,7 +128,7 @@ func manageCategory(userAgent string, baseURL string, w http.ResponseWriter) {
 
 func managePages(userAgent string, baseURL string, w http.ResponseWriter) {
 	size := ""
-	if userAgent == "desktop" {
+	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
