@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/ArcWiki/ArcWiki/db"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -67,17 +68,18 @@ func formatDateTime(t time.Time) string {
 }
 
 func updateSubCategoryLinks() error {
-	fmt.Println("checking for subcategory links...")
+	log.Info("checking for subcategory links...")
+
 	db, err := db.LoadDatabase()
 	if err != nil {
-		return err
+		log.Error("Database Error:", err)
 	}
 	defer db.Close()
 
 	// Fetch all pages and their content
 	rows, err := db.Query("SELECT id, body FROM Categories")
 	if err != nil {
-		return err
+		log.Error("Database Error:", err)
 	}
 	defer rows.Close()
 
@@ -143,7 +145,8 @@ func updateSubCategoryLinks() error {
 				}
 			} else {
 				// Handle category not found (e.g., log error, create category, or skip)
-				fmt.Println("Category not found in Categories table:", categoryName)
+				log.Error("Category not found in Categories table:", categoryName)
+
 			}
 		}
 	}

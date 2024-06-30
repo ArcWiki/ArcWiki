@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/ArcWiki/ArcWiki/db"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gomarkdown/markdown"
 )
@@ -71,7 +72,8 @@ func (p *Page) save() error {
 	fmt.Println("the page saved was called " + canonicalizeTitle(p.Title))
 	db, err := db.LoadDatabase()
 	if err != nil {
-		return fmt.Errorf("error loading database: %w", err) // Return a descriptive error
+		log.Error("Database Error:", err)
+
 	}
 	defer db.Close()
 
@@ -110,11 +112,13 @@ func (p *Page) save() error {
 		if err == sql.ErrNoRows {
 			fmt.Println("page with title", canonicalizeTitle(p.Title)+" not found") // Informative error
 		}
-		fmt.Println("error checking for existing page:", err)
+		log.Error("error checking for existing page:", err)
+
 	}
 	_, err = tx.Exec("DELETE FROM CategoryPages WHERE page_id = ?", pageID)
 	if err != nil {
-		fmt.Println("Error deleting existing category links:", err)
+		log.Error("Error deleting existing category links:", err)
+
 		// Consider returning an error or logging the error and continuing
 	}
 	for _, matchedCategory := range matches {
@@ -136,14 +140,15 @@ func (p *Page) save() error {
 			fmt.Println(err)
 			_ = tx.Rollback() // Explicit rollback on error
 
-			fmt.Println("error inserting category link:", err)
+			log.Error("Error inserting category link:", err)
+
 		}
 	}
 
 	// Commit the transaction only once after successful insertions
 	err = tx.Commit()
 	if err != nil {
-		fmt.Println("error committing transaction:", err)
+		log.Error("Error committing transaction:", err)
 	}
 
 	fmt.Println("Updated page with title:", canonicalizeTitle(p.Title)) // Clearer message
@@ -163,7 +168,7 @@ func addPage(w http.ResponseWriter, r *http.Request) {
 
 		db, err := db.LoadDatabase()
 		if err != nil {
-			fmt.Println("Database Error: " + err.Error())
+			log.Error("Database Error:", err)
 			return // Handle error
 		}
 
@@ -232,13 +237,14 @@ func addPage(w http.ResponseWriter, r *http.Request) {
 func (p *Page) deletePage() error {
 	db, err := db.LoadDatabase()
 	if err != nil {
-		return fmt.Errorf("error loading database: %w", err) // Return a descriptive error
+		log.Error("Database Error:", err)
 	}
 	defer db.Close()
 
 	tx, err := db.Begin() // Start transaction
 	if err != nil {
-		return fmt.Errorf("error starting transaction: %w", err)
+		log.Error("error starting transaction: ", err)
+
 	}
 	defer func() {
 		if err != nil { // Rollback on any error
@@ -261,30 +267,30 @@ func (p *Page) deletePage() error {
 	// Delete category links first (assuming foreign key constraints exist)
 	_, err = tx.Exec("DELETE FROM CategoryPages WHERE page_id = ?", pageID) // Use title for efficiency (assuming unique constraint)
 	if err != nil {
-		fmt.Println("Error deleting category links:", err)
+		log.Error("Error Deleting Category Links:", err)
 		// Consider logging the error and continuing with page deletion (optional)
 	}
 
 	// Delete the page
 	result, err := tx.Exec("DELETE FROM Pages WHERE title = ?", canonicalizeTitle(p.Title))
 	if err != nil {
-		fmt.Println("error deleting page:", err)
+		log.Error("error deleting page:", err)
 	}
 
 	rowsDeleted, err := result.RowsAffected()
 	if err != nil {
-		fmt.Println("error checking rows affected:", err)
+		log.Error("error checking rows affected:", err)
 	}
 
 	if rowsDeleted > 0 {
-		fmt.Println("Deleted page with title:", canonicalizeTitle(p.Title))
+		log.Error("Deleted page with title:", canonicalizeTitle(p.Title))
 	} else {
-		fmt.Println("No page found with title:", canonicalizeTitle(p.Title)) // May indicate a race condition
+		log.Error("No page found with title:", canonicalizeTitle(p.Title)) // May indicate a race condition
 	}
 
 	err = tx.Commit() // Commit the transaction
 	if err != nil {
-		fmt.Println("error committing transaction:", err)
+		log.Error("error committing transaction:", err)
 	}
 
 	return nil
@@ -297,6 +303,8 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 	p := &Page{CTitle: title, Title: titleSave, Body: template.HTML(body)}
 	err := p.save()
 	if err != nil {
+		log.Error("Error Saving Page:", err)
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -306,7 +314,8 @@ func loadPage(title string, userAgent string) (*Page, error) {
 
 	safeMenu, err := loadMenu()
 	if err != nil {
-		return nil, err
+		log.Error("Error Loading Menu")
+
 	}
 	size := ""
 	if userAgent == Desktop {
@@ -316,7 +325,7 @@ func loadPage(title string, userAgent string) (*Page, error) {
 	}
 	db, err := db.LoadDatabase()
 	if err != nil {
-		return nil, err
+		log.Error("Database Error:", err)
 	}
 
 	stmt, err := db.Prepare("SELECT title, body, updated_at FROM Pages WHERE title = ?")
@@ -363,7 +372,7 @@ func loadPageNoHtml(title string, userAgent string) (*EditPage, error) {
 
 	safeMenu, err := loadMenu()
 	if err != nil {
-		return nil, err
+		log.Error("Error Loading Menu")
 	}
 	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
@@ -372,7 +381,7 @@ func loadPageNoHtml(title string, userAgent string) (*EditPage, error) {
 	}
 	db, err := db.LoadDatabase()
 	if err != nil {
-		return nil, err
+		log.Error("Database Error:", err)
 	}
 	stmt, err := db.Prepare("SELECT title, body, updated_at FROM Pages WHERE title = ?")
 	if err != nil {
@@ -407,7 +416,7 @@ func loadPageSpecial(categoryName string, userAgent string) (*Page, error) {
 
 		db, err := db.LoadDatabase()
 		if err != nil {
-			return nil, err
+			log.Error("Database Error:", err)
 		}
 		defer db.Close()
 
@@ -439,7 +448,7 @@ func loadPageSpecial(categoryName string, userAgent string) (*Page, error) {
 		bodyHTML := fmt.Sprintf("<h2 class=\"wikih2\">All Categories</h2><ul>\n%s\n</ul>", strings.Join(categories, "\n"))
 		safeMenu, err := loadMenu()
 		if err != nil {
-			return nil, err // Return error if menu file reading fails
+			log.Error("Error Loading Menu")
 		}
 		return &Page{
 
@@ -454,7 +463,8 @@ func loadPageSpecial(categoryName string, userAgent string) (*Page, error) {
 	} else if categoryName == "AllPages" {
 		db, err := db.LoadDatabase()
 		if err != nil {
-			return nil, err
+			log.Error("Database Error:", err)
+
 		}
 		defer db.Close()
 		// List all pages from the database
@@ -477,7 +487,7 @@ func loadPageSpecial(categoryName string, userAgent string) (*Page, error) {
 		bodyHTML := fmt.Sprintf("<h2 class=\"wikih2\">All Pages</h2><ul>\n%s\n</ul>", strings.Join(pageLinks, "\n"))
 		safeMenu, err := loadMenu()
 		if err != nil {
-			return nil, err // Return error if menu file reading fails
+			log.Error("Error Loading Menu")
 		}
 		return &Page{
 			NavTitle:   config.SiteTitle,
@@ -492,7 +502,7 @@ func loadPageSpecial(categoryName string, userAgent string) (*Page, error) {
 
 		safeMenu, err := loadMenu()
 		if err != nil {
-			return nil, err // Return error if menu file reading fails
+			log.Error("Error Loading Menu")
 		}
 		return &Page{
 			NavTitle:   config.SiteTitle,

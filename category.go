@@ -29,6 +29,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/ArcWiki/ArcWiki/db"
+	log "github.com/sirupsen/logrus"
 )
 
 type Category struct {
@@ -44,13 +45,15 @@ func (p *Category) deleteCategory() error {
 	db, err := db.LoadDatabase()
 
 	if err != nil {
-		panic(err)
+		fmt.Println("Error opening database:", err)
+
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare("DELETE FROM Categories WHERE title = ?")
 	if err != nil {
-		panic(err)
+		fmt.Println("Error Deleting from database:", err)
+
 	}
 	defer stmt.Close()
 
@@ -180,7 +183,8 @@ func loadPageCategory(title string, categoryName string, userAgent string) (*Pag
 	}
 	safeMenu, err := loadMenu() // Replace with your menu loading logic
 	if err != nil {
-		return nil, err
+		log.Error("error loading menu")
+		//return nil, err
 	}
 
 	// Gather matching pages
@@ -218,7 +222,7 @@ func loadPageCategory(title string, categoryName string, userAgent string) (*Pag
 func loadLinksFromSubCategoryFile(categoryName string) []string {
 	db, err := db.LoadDatabase()
 	if err != nil {
-		return nil
+		log.Error("Error Loading Database:", err)
 	}
 	defer db.Close()
 
@@ -227,7 +231,8 @@ func loadLinksFromSubCategoryFile(categoryName string) []string {
 	if err != nil {
 		return nil
 	}
-	fmt.Println(categoryID)
+	log.Debug(categoryID)
+	//fmt.Println(categoryID)
 
 	// Retrieve page paths from CategoryPages
 	rows, err := db.Query("SELECT Categories.title FROM SubCategoryPages JOIN Categories ON Categories.id = SubCategoryPages.category_id WHERE SubCategoryPages.subcategory_id = ?", categoryID)
@@ -359,7 +364,7 @@ func loadCategoryNoHtml(title string, userAgent string) (*EditPage, error) {
 	size := ""
 	safeMenu, err := loadMenu()
 	if err != nil {
-		return nil, err
+		log.Error("Error Loading Menu:", err)
 	}
 	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
@@ -368,7 +373,7 @@ func loadCategoryNoHtml(title string, userAgent string) (*EditPage, error) {
 	}
 	db, err := db.LoadDatabase()
 	if err != nil {
-		return nil, err
+		log.Error("Error Loading Database:", err)
 	}
 	stmt, err := db.Prepare("SELECT title, body FROM Categories WHERE title = ?")
 	if err != nil {

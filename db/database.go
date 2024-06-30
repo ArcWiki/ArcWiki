@@ -20,6 +20,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func LoadDatabase() (*sql.DB, error) {
@@ -30,12 +32,14 @@ func DBSetup() {
 	dbName := "arcWiki.db"
 	db, err := sql.Open("sqlite3", dbName)
 	if err != nil {
-		fmt.Println("Error opening database:", err)
+		log.Error("Error opening databsae: ", err)
+
 		return
 	}
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Settings (installed BOOLEAN UNIQUE NOT NULL DEFAULT FALSE); `)
 	if err != nil {
-		fmt.Println("Error creating Settings table:", err)
+		log.Error("Error creating Settings table: ", err)
+
 		return
 	} else {
 		query := `SELECT installed FROM Settings`
@@ -49,8 +53,9 @@ func DBSetup() {
 		} else {
 			status = "FALSE"
 		}
-		fmt.Println("The current value of installed is:", status)
+		log.Info("The current value of installed is:", status)
 		if err != nil {
+
 			fmt.Println(err)
 		}
 
@@ -143,8 +148,6 @@ func DBSetup() {
 			// }
 			defer db.Close()
 			// fmt.Println("Database opened successfully!")
-		} else {
-			fmt.Println("it's already installed please delete the database if you wish for a fresh install")
 		}
 	}
 }

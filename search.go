@@ -28,6 +28,7 @@ import (
 	"github.com/ArcWiki/ArcWiki/db"
 	"github.com/gomarkdown/markdown"
 	"github.com/houseme/mobiledetect"
+	log "github.com/sirupsen/logrus"
 )
 
 type Result struct {
@@ -48,13 +49,17 @@ func QueryHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Access form data from request object
 	query := r.FormValue("query")
-	fmt.Println("what you submitted:", query)
+
+	log.WithFields(log.Fields{
+		"query": query,
+	}).Info("Search Form:")
+	//log.Info("", query)
 
 	// Get all titles from the database
 
 	db, err := db.LoadDatabase()
 	if err != nil {
-		panic(err) // Handle errors appropriately in production
+		log.Error("Database Error:", err)
 	}
 	rows, err := db.Query("SELECT title, body FROM Pages WHERE title LIKE ?", "%"+query+"%")
 	if err != nil {
@@ -66,15 +71,15 @@ func QueryHandler(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close() // Close the rows after iterating
 	safeMenu, err := loadMenu()
 	if err != nil {
-		// Handle error
-		return
+		log.Error("Error Loading Menu:", err)
 	}
 	userAgent := ""
 	size := ""
 	detect := mobiledetect.New(r, nil)
 
 	if detect.IsMobile() || detect.IsTablet() {
-		fmt.Println("is either a mobile or tablet")
+		log.Debug("is either mobile or tablet")
+
 		userAgent = Mobile
 	} else {
 		userAgent = Desktop
@@ -96,8 +101,7 @@ func QueryHandler(w http.ResponseWriter, r *http.Request) {
 		var result Result
 		err := rows.Scan(&result.Title, &result.Body)
 		if err != nil {
-			fmt.Println("Error with searching database:", err)
-			return
+			log.Error("Error with searching database:", err)
 		}
 		words := strings.Fields(result.Body) // Split on whitespace
 		if len(words) > 7 {                  // Adjust limit as needed (7 words in this example)
@@ -112,17 +116,13 @@ func QueryHandler(w http.ResponseWriter, r *http.Request) {
 	templates, err = templates.ParseFiles("templates/results.html", "templates/navbar.html", "templates/header.html", "templates/footer.html")
 	if err != nil {
 		// Handle template parsing error
-		fmt.Println("Error parsing templates:", err)
-		return
+		log.Error("Error parsing templates:", err)
 	}
-
-	// ... (your search handler logic to get results)
 
 	// Execute the relevant template with data
 	err = templates.ExecuteTemplate(w, "results.html", data) // Assuming search results are in "results"
 	if err != nil {
-		// Handle template execution error
-		fmt.Println("Error executing template:", err)
+		log.Error("Error executing templates:", err)
 	}
 
 	//renderTemplate(w, "search", p)
@@ -150,7 +150,8 @@ func SearchHandler(w http.ResponseWriter, r *http.Request, title string, userAge
 			// Load the page for standard title viewing
 			p, err := LoadNothing(title, userAgent)
 			if err != nil {
-				fmt.Println("viewHandler: Something weird happened")
+				log.Error("viewHandler: Something weird happened:", err)
+
 				http.Redirect(w, r, "/title/Main_page", http.StatusFound)
 				return
 			}
@@ -163,7 +164,7 @@ func SearchHandler(w http.ResponseWriter, r *http.Request, title string, userAge
 		// Load the page for standard title viewing
 		p, err := LoadNothing("Main_page", userAgent)
 		if err != nil {
-			fmt.Println("viewHandler: Something weird happened")
+			log.Error("Viewer handler something odd happened:", err)
 			//http.Redirect(w, r, "/title/Main_page", http.StatusFound)
 			return
 		}
@@ -175,7 +176,7 @@ func LoadNothing(title string, userAgent string) (*Page, error) {
 
 	safeMenu, err := loadMenu()
 	if err != nil {
-		return nil, err
+		log.Error("Error Loading Menu:", err)
 	}
 	size := ""
 	if userAgent == Desktop {
@@ -185,7 +186,8 @@ func LoadNothing(title string, userAgent string) (*Page, error) {
 	}
 	db, err := db.LoadDatabase()
 	if err != nil {
-		return nil, err
+		log.Error("Error Loading Database:", err)
+
 	}
 
 	stmt, err := db.Prepare("SELECT title, body, updated_at FROM Pages WHERE title = ?")
@@ -219,6 +221,7 @@ func LoadNothing(title string, userAgent string) (*Page, error) {
 		// ... (existing code for markdown parsing and HTML generation)
 		return &Page{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: "Search", Title: "title", Body: "", Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink, UpdatedDate: footer}, nil
 	} else if err != sql.ErrNoRows { // Handle other SQLite errors
+		log.Error("Error Database Found No Rows:", err)
 		return nil, err
 	}
 

@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"log"
+
 	"net/http"
 	"os"
 	"regexp"
@@ -29,8 +29,9 @@ import (
 	"time"
 
 	"github.com/ArcWiki/ArcWiki/db"
-
 	"github.com/houseme/mobiledetect"
+	log "github.com/sirupsen/logrus"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -51,7 +52,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 		case strings.HasPrefix(category, "Help:"):
 			specialPageName := strings.TrimPrefix(category, "Help:")
 			specialPageName = strings.TrimSpace(specialPageName)
-			fmt.Println("Help page accessed:", specialPageName)
+			log.Info("Help page accessed:", specialPageName)
 
 			p, err := loadPage("Help-"+specialPageName, userAgent)
 			if err != nil {
@@ -65,7 +66,8 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 			fmt.Println("Random page accessed")
 			db, err := db.LoadDatabase()
 			if err != nil {
-				panic(err) // Handle errors appropriately in production
+				log.Error("Error Loading Database:", err)
+
 			}
 			defer db.Close()
 
@@ -99,13 +101,15 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 		case strings.HasPrefix(category, "Special:"):
 			specialPageName := strings.TrimPrefix(category, "Special:")
 			specialPageName = strings.TrimSpace(specialPageName)
-			fmt.Println("Special page accessed:", specialPageName)
+			log.Info("Special page accessed:", specialPageName)
 
 			p, err := loadPageSpecial(specialPageName, userAgent)
 			if err != nil {
-				fmt.Println("Error Occured in:", specialPageName)
+				log.Error("Error Occurred in:", err)
+
+				//fmt.Println("Error Occured in:", specialPageName)
 				//http.Redirect(w, r, "/edit/"+title, http.StatusFound)
-				return
+
 			}
 			renderTemplate(w, "title", p)
 		//possibly for Editing Categories forgotten
@@ -115,15 +119,15 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 			fmt.Println("Category: ", categoryName)
 			p, err := loadPageCategory(title, categoryName, userAgent)
 			if err != nil {
-				fmt.Println("Error Occured in: Editing category")
+				log.Error("Error Occurred in:", err)
+
 				//http.Redirect(w, r, "/edit/"+title, http.StatusFound)
 				return
 			}
 			renderTemplate(w, "title", p)
 		// Normal View Normal View Normal View
 		default:
-
-			fmt.Println("No category specified, defaulting to normal view")
+			log.Info("Showing Page: ", title)
 
 			// Load the page for standard title viewing
 			p, err := loadPage(title, userAgent)
@@ -322,9 +326,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 		title := ""
 		safeMenu, err := loadMenu()
 		if err != nil {
-			log.Println("Error loading menu:", err)
-			// Handle the error, e.g., display a user-friendly message
-			return
+			log.Error("Error Loading Menu:", err)
 		}
 		// Create an AddPage instance directly (no loading from file)
 		ap := &AddPage{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: "Add Page", Title: title, Menu: safeMenu, Size: template.HTML(size), UpdatedDate: ""}
@@ -356,7 +358,7 @@ func errorPage(w http.ResponseWriter, r *http.Request) {
 func dbsql(stater string, args ...interface{}) error {
 	db, err := db.LoadDatabase()
 	if err != nil {
-		fmt.Println("Database Error: " + err.Error())
+		log.Error("Error Loading Database:", err)
 
 	}
 	defer db.Close() // Ensure database closure
@@ -433,16 +435,48 @@ func loadMenu() (template.HTML, error) {
 }
 
 func main() {
+	//start log
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:   false,
+		FullTimestamp:   true,
+		TimestampFormat: "15:04:05",
+	})
+
+	// Only log the warning severity or above.
+	log.SetLevel(log.InfoLevel)
+	// A common pattern is to re-use fields between logging statements by re-using
+	// the logrus.Entry returned from WithFields()
+
+	log.Info("Starting your instance of ArcWiki")
+
+	// log.WithFields(log.Fields{
+	// 	"animal": "walrus",
+	// 	"size":   10,
+	// }).Info("A group of walrus emerges from the ocean")
+
+	// log.WithFields(log.Fields{
+	// 	"omg":    true,
+	// 	"number": 122,
+	// }).Warn("The group's number increased tremendously!")
+
+	// log.WithFields(log.Fields{
+	// 	"omg":    true,
+	// 	"number": 100,
+	// }).Fatal("The ice breaks!")
+
 	db.DBSetup()
 
 	configBytes, err := os.ReadFile("config/config.json")
 	if err != nil {
-		panic(err)
+
+		log.Panic("Error Reading File:", err)
+
 	}
 
 	err = json.Unmarshal(configBytes, &config)
 	if err != nil {
 		panic(err)
+		log.Warn("Error unmarshalling File:", err)
 	}
 
 	if os.Getenv("COLOR") != "" {
@@ -451,14 +485,17 @@ func main() {
 	if os.Getenv("SITENAME") != "" {
 		config.SiteTitle = os.Getenv("SITENAME")
 	}
-	fmt.Println(config.Admin[0].Username)
-	fmt.Println("Starting your instance of ArcWiki called:", config.SiteTitle)
+	//fmt.Println(config.Admin[0].Username)
+
+	//	log.Info("Starting your instance of ArcWiki called:", config.SiteTitle)
+
 	go func() {
 		for {
 
 			if err := updateSubCategoryLinks(); err != nil {
 				// Handle error
-				fmt.Println("Error updating subcategories:", err)
+				log.Error("Error updating subcategories:", err)
+				//fmt.Println("Error updating subcategories:", err)
 			}
 			time.Sleep(60 * time.Second)
 		}

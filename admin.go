@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/ArcWiki/ArcWiki/db"
+	log "github.com/sirupsen/logrus"
 )
 
 func adminHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
@@ -167,7 +168,7 @@ func managePages(userAgent string, baseURL string, w http.ResponseWriter) {
 
 	safeMenu, err := loadMenu()
 	if err != nil {
-		fmt.Println("error loading menu")
+		log.Error("error loading menu")
 	}
 
 	p := Page{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: "Manage Pages", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu}

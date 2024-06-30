@@ -24,6 +24,7 @@ import (
 	"os"
 
 	"github.com/gorilla/sessions"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -74,7 +75,8 @@ func loginFormHandler(w http.ResponseWriter, r *http.Request, title string, user
 	//load menu
 	safeMenu, err := loadMenu()
 	if err != nil {
-		fmt.Println("error loading menu")
+
+		log.Error("error loading menu")
 	}
 
 	p := Page{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: removeUnderscores(title), Title: "login", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink}
