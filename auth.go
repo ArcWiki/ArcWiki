@@ -18,7 +18,6 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 	"os"
@@ -105,7 +104,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request, title string, userAgen
 			session, _ := store.Get(r, "cookie-name")
 			session.Values["authenticated"] = true
 			session.Save(r, w)
-			fmt.Println("login success")
+
+			log.Info("User Logged In Successfully")
 			// Authentication successful
 			http.Redirect(w, r, "/admin", http.StatusFound)
 		} else {

@@ -125,8 +125,8 @@ func updateSubCategoryLinks() error {
 	for _, page := range pagesToUpdate {
 
 		// Batch delete existing links for the page
-		fmt.Println("debuger")
-		fmt.Println("Cat pageID:", page.pageID)
+		log.Error("Cat pageID:", page.pageID)
+
 		_, err = tx.Exec("DELETE FROM SubCategoryPages WHERE subcategory_id = ?", page.pageID)
 		if err != nil {
 			return err
@@ -141,7 +141,8 @@ func updateSubCategoryLinks() error {
 			if err == nil {
 				_, err = tx.Exec("INSERT INTO SubCategoryPages (subcategory_id, category_id) VALUES (?, ?)", page.pageID, categoryID)
 				if err != nil {
-					return err
+					log.Error("Database Error", err)
+
 				}
 			} else {
 				// Handle category not found (e.g., log error, create category, or skip)
@@ -154,7 +155,7 @@ func updateSubCategoryLinks() error {
 	// Commit the transaction if no errors occurred
 	err = tx.Commit()
 	if err != nil {
-		return err
+		log.Error("Database Error", err)
 	}
 
 	return nil

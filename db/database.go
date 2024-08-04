@@ -19,7 +19,6 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -56,11 +55,12 @@ func DBSetup() {
 		log.Info("The current value of installed is:", status)
 		if err != nil {
 
-			fmt.Println(err)
+			log.Error("Database Error", err)
 		}
 
 		if !installed {
-			fmt.Println("now creating tables")
+
+			log.Info("Creating Tables")
 
 			_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Categories (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,7 +70,7 @@ func DBSetup() {
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 		);  `)
 			if err != nil {
-				fmt.Println("Error creating Categories table:", err)
+				log.Error("Error creating Categories table:", err)
 				return
 			}
 
@@ -83,7 +83,7 @@ func DBSetup() {
 	updated_at DATETIME
 	);`)
 			if err != nil {
-				fmt.Println("Error creating Categories table:", err)
+				log.Error("Error creating Categories table:", err)
 				return
 			}
 
@@ -96,7 +96,7 @@ func DBSetup() {
 	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 	);`)
 			if err != nil {
-				fmt.Println("Error creating Categories table:", err)
+				log.Error("Error creating Categories table:", err)
 				return
 			}
 
@@ -105,7 +105,7 @@ func DBSetup() {
 	category_id INTEGER REFERENCES Categories(id) ON DELETE CASCADE
 	);`)
 			if err != nil {
-				fmt.Println("Error creating Categories table:", err)
+				log.Error("Error creating Categories table:", err)
 				return
 			}
 
@@ -114,7 +114,7 @@ func DBSetup() {
 			category_id INTEGER REFERENCES Categories(id) ON DELETE CASCADE
 		);`)
 			if err != nil {
-				fmt.Println("Error creating Categories table:", err)
+				log.Error("Error creating Categories table:", err)
 				return
 			}
 			_, err = db.Exec(`CREATE TABLE IF NOT EXISTS  Users (
@@ -124,24 +124,24 @@ func DBSetup() {
 		username BLOB DEFAULT '' NOT NULL   
 		)`)
 			if err != nil {
-				fmt.Println("Error creating Categories table:", err)
+				log.Error("Error creating Categories table:", err)
 				return
 			}
 			_, err = db.Exec(`INSERT INTO Settings (installed) VALUES (TRUE)`)
 			if err != nil {
-				fmt.Println("Error updating installed value:", err)
+				log.Error("Error updating installed value:", err)
 				return
 			} else {
-				fmt.Println("Installed value updated successfully")
+				log.Info("Installed value updated successfully")
 			}
 			_, err = db.Exec(`INSERT INTO Pages (title, body, user_id, created_at, updated_at) VALUES 
 			(?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`, "Main_page", "## Welcome to ArcWiki\n let the games begin")
 
 			if err != nil {
-				fmt.Println("Error inserting into pages value:", err)
+				log.Error("Error inserting into pages value:", err)
 				return
 			} else {
-				fmt.Println("Installed value updated successfully")
+				log.Info("Installed value updated successfully")
 
 			}
 			// fmt.Println("Tables created successfully!")

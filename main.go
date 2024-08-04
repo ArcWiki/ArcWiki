@@ -56,14 +56,15 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 
 			p, err := loadPage("Help-"+specialPageName, userAgent)
 			if err != nil {
-				fmt.Println("Error Occured in:", specialPageName)
+				log.Error("Error Occured in:", specialPageName)
+
 				http.Redirect(w, r, "/", http.StatusFound)
 				return
 			}
 			renderTemplate(w, "title", p)
 			//Gets a list of pages and Random lands on one
 		case strings.HasPrefix(category, "Special:Random"):
-			fmt.Println("Random page accessed")
+			log.Info("Random page accessed:", category)
 			db, err := db.LoadDatabase()
 			if err != nil {
 				log.Error("Error Loading Database:", err)
@@ -76,7 +77,8 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 			var title string
 			stmt, err := db.Prepare("SELECT title FROM Pages ORDER BY RANDOM() LIMIT 1")
 			if err != nil {
-				fmt.Println("Error preparing statement:", err)
+
+				log.Error("Error preparing statement:", err)
 				return
 			}
 			defer stmt.Close() // Close the statement after use
@@ -85,13 +87,13 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 			err = row.Scan(&title)
 			if err != nil {
 
-				fmt.Println("No pages found in database")
+				log.Info("No pages found in database")
 
 				return
 			}
 
 			// Use the retrieved title securely
-			fmt.Println("Random Page Title:", title) // Or use the title for your purpose
+			log.Info("Random Page Title:", title) // Or use the title for your purpose
 
 			http.Redirect(w, r, "/title/"+title, http.StatusFound) // Redirect to the randomly selected page
 
@@ -116,7 +118,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 		case strings.Contains(category, ":"):
 			categoryParts := strings.Split(category, ":")
 			categoryName := strings.TrimSpace(categoryParts[1])
-			fmt.Println("Category: ", categoryName)
+			log.Debug("Category: ", categoryName)
 			p, err := loadPageCategory(title, categoryName, userAgent)
 			if err != nil {
 				log.Error("Error Occurred in:", err)
@@ -132,7 +134,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 			// Load the page for standard title viewing
 			p, err := loadPage(title, userAgent)
 			if err != nil {
-				fmt.Println("viewHandler: Something weird happened")
+				log.Error("viewHandler: Something weird happened")
 				http.Redirect(w, r, "/title/Main_page", http.StatusFound)
 				return
 			}
@@ -145,7 +147,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 		// Load the page for standard title viewing
 		p, err := loadPage("Main_page", userAgent)
 		if err != nil {
-			fmt.Println("viewHandler: Something weird happened")
+			log.Error("viewHandler: Something weird happened")
 			http.Redirect(w, r, "/title/Main_page", http.StatusFound)
 			return
 		}
@@ -157,7 +159,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 // Edit Handler with a switch for editing Categories
 func editHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
 	updated_at := "Not Available"
-	fmt.Println(title)
+	log.Debug(title)
 	size := ""
 	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
@@ -170,7 +172,7 @@ func editHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 	case strings.Contains(category, ":"):
 		categoryParts := strings.Split(category, ":")
 		categoryName := strings.TrimSpace(categoryParts[1])
-		fmt.Println("Category:", categoryName)
+		log.Debug("Category:", categoryName)
 
 		session, _ := store.Get(r, "cookie-name")
 		auth, ok := session.Values["authenticated"].(bool)
@@ -236,10 +238,11 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string, string)) ht
 		detect := mobiledetect.New(r, nil)
 		userAgent := ""
 		if detect.IsMobile() || detect.IsTablet() {
-			fmt.Println("is either a mobile or tablet")
+			//log.Debug("Responsive Mode Activated")
 			userAgent = Mobile
 		} else {
 			userAgent = Desktop
+			//log.Debug("Desktop Detected")
 		}
 
 		//userAgent := requestHeaders.Get("User-Agent")
@@ -249,7 +252,7 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string, string)) ht
 
 		if m == nil {
 			http.NotFound(w, r)
-			fmt.Println("something went wrong")
+			log.Error("Handler Error")
 			return
 		}
 
@@ -316,7 +319,7 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 		detect := mobiledetect.New(r, nil)
 		size := ""
 		if detect.IsMobile() || detect.IsTablet() {
-			fmt.Println("is either a mobile or tablet")
+			//fmt.Println("is either a mobile or tablet")
 
 			size = "<div class=\"col-12 d-block d-sm-none\">"
 		} else {
@@ -342,7 +345,7 @@ func errorPage(w http.ResponseWriter, r *http.Request) {
 	detect := mobiledetect.New(r, nil)
 	userAgent := ""
 	if detect.IsMobile() || detect.IsTablet() {
-		fmt.Println("is either a mobile or tablet")
+		//fmt.Println("is either a mobile or tablet")
 		userAgent = Mobile
 	} else {
 		userAgent = Desktop
@@ -365,13 +368,13 @@ func dbsql(stater string, args ...interface{}) error {
 
 	stmt, err := db.Prepare(stater)
 	if err != nil {
-		fmt.Println("Database Error: " + err.Error())
+		log.Error("Database Error: ", err)
 	}
 	defer stmt.Close() // Close the prepared statement
 
 	_, err = stmt.Exec(args...) // Execute the statement with provided arguments
 	if err != nil {
-		fmt.Println("Database Error: " + err.Error())
+		log.Error("Database Error: ", err)
 	}
 
 	return nil // Indicate successful execution
@@ -384,14 +387,15 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 
 	err := templates.ExecuteTemplate(w, tmpl+".html", p)
 	if err != nil {
-		fmt.Println("Error Occured in renderTemplate " + err.Error())
+		log.Error("Error Occured in renderTemplate: ", err)
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 func renderEditPageTemplate(w http.ResponseWriter, tmpl string, ep *EditPage) {
 	err := templates.ExecuteTemplate(w, tmpl+".html", ep)
 	if err != nil {
-		fmt.Println("Error Occured in renderEditPageTemplate " + err.Error())
+		log.Error("Error Occured in renderEditPageTemplate: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -399,7 +403,7 @@ func renderEditPageTemplate(w http.ResponseWriter, tmpl string, ep *EditPage) {
 func renderAddPageTemplate(w http.ResponseWriter, tmpl string, ap *AddPage) {
 	err := templates.ExecuteTemplate(w, tmpl+".html", ap)
 	if err != nil {
-		fmt.Println("Error Occured in renderAddPageTemplate " + err.Error())
+		log.Error("Error Occured in renderEditPageTemplate: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

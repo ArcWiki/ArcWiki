@@ -45,41 +45,43 @@ func (p *Category) deleteCategory() error {
 	db, err := db.LoadDatabase()
 
 	if err != nil {
-		fmt.Println("Error opening database:", err)
+
+		log.Error("Database Error", err)
 
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare("DELETE FROM Categories WHERE title = ?")
 	if err != nil {
-		fmt.Println("Error Deleting from database:", err)
-
+		log.Error("Database Error", err)
 	}
 	defer stmt.Close()
 
 	result, err := stmt.Exec(p.Title)
 	if err != nil {
-		panic(err)
+		log.Error("Database Error", err)
 	}
 
 	rowsDeleted, err := result.RowsAffected()
 	if err != nil {
-		panic(err)
+		log.Error("Database Error", err)
 	}
 
 	if rowsDeleted > 0 {
-		fmt.Println("Deleted", rowsDeleted, "category with title:", p.Title)
+
+		log.Info("Deleted", rowsDeleted, "category with title:", p.Title)
 	} else {
-		fmt.Println("No category found with title:", p.Title)
+		log.Info("No category found with title:", p.Title)
 	}
 	return nil
 }
 func (p *Page) saveCat() error {
-	fmt.Println("titlehere.." + p.Title + ".. " + string(p.Body))
+
+	log.Info("titlehere.." + p.Title + ".. " + string(p.Body))
 
 	err := dbsql("UPDATE Categories SET body = ? WHERE title = ?", string(p.Body), p.Title)
 	if err != nil {
-		fmt.Println("Page Save Error: " + err.Error())
+		log.Error("Database Error", err)
 
 	}
 
@@ -90,12 +92,14 @@ func getCategoryIDByName(categoryName string) (int, error) {
 	//new
 	db, err := db.LoadDatabase()
 	if err != nil {
+		log.Error("Database Error", err)
 		return 0, err
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare("SELECT id FROM Categories WHERE title = ?")
 	if err != nil {
+		log.Error("Database Error", err)
 		return 0, err
 	}
 	defer stmt.Close()
@@ -105,6 +109,7 @@ func getCategoryIDByName(categoryName string) (int, error) {
 	err = row.Scan(&categoryID)
 	if err != nil {
 		if err == sql.ErrNoRows {
+
 			return 0, nil // Category not found
 		}
 		return 0, err
@@ -118,39 +123,40 @@ func addCat(w http.ResponseWriter, r *http.Request) {
 	categoryName := r.URL.Path[len("/category/"):]
 	db, err := db.LoadDatabase()
 	if err != nil {
-		fmt.Println("Database Error: " + err.Error())
+		log.Error("Database Error", err)
 
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare("INSERT INTO Categories (title, body, user_id) VALUES (?, ?, ?)")
 	if err != nil {
-		fmt.Println("Database Error: " + err.Error())
+		log.Error("Database Error", err)
 
 	}
 	defer stmt.Close()
 
 	res, err := stmt.Exec(canonicalizeTitle(categoryName), "", 1)
 	if err != nil {
-		fmt.Println("Database Error: " + err.Error())
+		log.Error("Database Error", err)
 
 	}
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
 		// Handle error
 	} else if rowsAffected != 1 {
-		fmt.Println("Unexpected number of rows affected:", rowsAffected)
+		log.Error("Unexpected number of rows affected:", rowsAffected)
 	} else {
-		fmt.Println("Category inserted successfully!")
+		log.Info("Category inserted successfully!")
 		http.Redirect(w, r, "/title/Special:Categories", http.StatusFound)
 	}
-	fmt.Println(categoryName)
+	log.Debug("Category Name", categoryName)
+
 }
 func checkCategoryExistence(categoryName string) bool {
 
 	db, err := db.LoadDatabase()
 	if err != nil {
-		panic(err)
+		log.Error("Database Error", err)
 	}
 	defer db.Close()
 
@@ -159,7 +165,7 @@ func checkCategoryExistence(categoryName string) bool {
 	// Prepare the SQL query
 	stmt, err := db.Prepare("SELECT EXISTS(SELECT 1 FROM Categories WHERE title = ?)")
 	if err != nil {
-		panic(err)
+		log.Error("Database Error", err)
 	}
 	defer stmt.Close()
 
@@ -167,7 +173,7 @@ func checkCategoryExistence(categoryName string) bool {
 	var exists bool
 	err = stmt.QueryRow(categoryName).Scan(&exists)
 	if err != nil {
-		panic(err)
+		log.Error("Database Error", err)
 	}
 	return exists
 
@@ -190,7 +196,8 @@ func loadPageCategory(title string, categoryName string, userAgent string) (*Pag
 	// Gather matching pages
 	matchingPages := findPagesInCategory(categoryName)
 	matchingSubCatPages := loadLinksFromSubCategoryFile(categoryName)
-	fmt.Println(matchingSubCatPages)
+
+	log.Info("Current Matching Sub Cat Pages", matchingSubCatPages)
 	// Format bodyHTML based on matching pages
 	categories := formatPageList(matchingPages)
 	subcategories := formatSubCatList(matchingSubCatPages)

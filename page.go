@@ -69,7 +69,8 @@ type EditPage struct {
 }
 
 func (p *Page) save() error {
-	fmt.Println("the page saved was called " + canonicalizeTitle(p.Title))
+
+	log.Info("the page saved was called " + canonicalizeTitle(p.Title))
 	db, err := db.LoadDatabase()
 	if err != nil {
 		log.Error("Database Error:", err)
@@ -79,7 +80,8 @@ func (p *Page) save() error {
 
 	tx, err := db.Begin() // Start transaction
 	if err != nil {
-		return fmt.Errorf("error starting transaction: %w", err)
+		log.Error("error starting transaction: %w", err)
+
 	}
 	defer func() {
 		if err != nil { // Rollback on any error
@@ -89,13 +91,15 @@ func (p *Page) save() error {
 
 	stmt, err := tx.Prepare("UPDATE Pages SET title = ?, body = ?, updated_at = CURRENT_TIMESTAMP WHERE title = ?")
 	if err != nil {
-		return fmt.Errorf("error preparing statement: %w", err)
+		log.Error("error starting transaction: %w", err)
+
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(canonicalizeTitle(p.Title), string(p.Body), canonicalizeTitle(p.Title)) // Ignore RowsAffected
 	if err != nil {
-		return fmt.Errorf("error executing update: %w", err)
+		log.Error("error starting transaction: %w", err)
+
 	}
 
 	// Prepare a list of category IDs to insert based on match[1]
@@ -110,7 +114,8 @@ func (p *Page) save() error {
 	err = row.Scan(&pageID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			fmt.Println("page with title", canonicalizeTitle(p.Title)+" not found") // Informative error
+
+			log.Error("page with title", canonicalizeTitle(p.Title)+" not found")
 		}
 		log.Error("error checking for existing page:", err)
 
@@ -125,7 +130,8 @@ func (p *Page) save() error {
 		var categoryID int
 		err := tx.QueryRow("SELECT id FROM Categories WHERE title = ?", matchedCategory[1]).Scan(&categoryID)
 		if err != nil {
-			fmt.Println("Error fetching category ID:", err)
+			log.Error("Error fetching category ID:", err)
+
 			continue // Skip to next category if error occurs
 		}
 		categoryIDsToInsert = append(categoryIDsToInsert, categoryID)
@@ -135,9 +141,13 @@ func (p *Page) save() error {
 	for _, categoryID := range categoryIDsToInsert {
 
 		_, err = tx.Exec("INSERT INTO CategoryPages (page_id, category_id) VALUES (?, ?)", pageID, categoryID)
-		fmt.Println("Inserting Category links", pageID, categoryID)
+
+		log.Info("Inserting Category links", pageID, categoryID)
 		if err != nil {
-			fmt.Println(err)
+
+			log.Error("Database Error:", err)
+			log.Error("Error Inserting Category Links", err)
+
 			_ = tx.Rollback() // Explicit rollback on error
 
 			log.Error("Error inserting category link:", err)
@@ -150,8 +160,7 @@ func (p *Page) save() error {
 	if err != nil {
 		log.Error("Error committing transaction:", err)
 	}
-
-	fmt.Println("Updated page with title:", canonicalizeTitle(p.Title)) // Clearer message
+	log.Info("Updated page with title:", canonicalizeTitle(p.Title)) // Clearer message
 	return nil
 }
 
@@ -176,23 +185,29 @@ func addPage(w http.ResponseWriter, r *http.Request) {
 
 		tx, err := db.Begin()
 		if err != nil {
-			fmt.Println(err)
+
+			log.Error("Database Error:", err)
 			return // Handle error
 		}
 		defer tx.Rollback() // Rollback if any error occurs
 
 		result, err := tx.Exec(stmt, freshTitle, body, 1)
 		if err != nil {
-			fmt.Println(err)
+
+			log.Error("Database Error:", err) // Clearer message
+
 			_ = tx.Rollback() // rollback if error occurs
 			return            // Handle error
 		}
 
 		var pageID int64
 		pageID, err = result.LastInsertId()
-		fmt.Println("page id is this : ", pageID)
+
+		log.Info("Page id inserted is :", pageID) // Clearer message
+
 		if err != nil {
-			fmt.Println(err)
+
+			log.Error("Database Error:", err)
 			_ = tx.Rollback() // Explicitly rollback if error occurs
 			return            // Handle error
 		}
@@ -203,7 +218,8 @@ func addPage(w http.ResponseWriter, r *http.Request) {
 			var categoryID int
 			err := tx.QueryRow("SELECT id FROM Categories WHERE title = ?", matchedCategory[1]).Scan(&categoryID)
 			if err != nil { // Handle potential error fetching category ID
-				fmt.Println("Error fetching category ID:", err)
+
+				log.Error("Error fetching category ID:", err)
 				continue // Skip to next category if error occurs
 			}
 			categoryIDsToInsert = append(categoryIDsToInsert, categoryID)
@@ -212,9 +228,11 @@ func addPage(w http.ResponseWriter, r *http.Request) {
 		// Batch insert new category links (adjusted for current page only)
 		for _, categoryID := range categoryIDsToInsert {
 			_, err = tx.Exec("INSERT INTO CategoryPages (page_id, category_id) VALUES (?, ?)", pageID, categoryID)
-			fmt.Println("Inserting Category links" + string(pageID) + " " + string(categoryID))
+
+			log.Info("Inserting Category links" + string(pageID) + " " + string(categoryID)) // Clearer message
+
 			if err != nil {
-				fmt.Println(err)
+				log.Error("Database Error:", err)
 				_ = tx.Rollback() // Explicitly
 				return            // Handle error
 			}
@@ -223,13 +241,14 @@ func addPage(w http.ResponseWriter, r *http.Request) {
 		// Commit the transaction only once after successful insertions
 		err = tx.Commit()
 		if err != nil {
-			fmt.Println(err)
+			log.Error("Database Error:", err)
+
 			return // Handle error
 		}
 
 		http.Redirect(w, r, "/title/"+freshTitle, http.StatusFound)
 	} else {
-		fmt.Println("cannot be index don't be silly")
+		log.Warn("cannot be index don't be silly")
 		http.Redirect(w, r, "/title/index", http.StatusFound)
 	}
 }
@@ -259,9 +278,11 @@ func (p *Page) deletePage() error {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			fmt.Println("page with title", canonicalizeTitle(p.Title)+" not found") // Informative error
+
+			log.Warn("page with title", canonicalizeTitle(p.Title)+" not found")
 		}
-		fmt.Println("error checking for existing page: %w", err)
+
+		log.Error("error checking for existing page: %w", err)
 	}
 
 	// Delete category links first (assuming foreign key constraints exist)
@@ -348,6 +369,7 @@ func loadPage(title string, userAgent string) (*Page, error) {
 	categoryLink := findAllCategoryLinks(happyhtml)
 	noLinks := removeCategoryLinks(happyhtml)
 	//fmt.Println(noLinks)
+	//log.Info(noLinks)
 	perfecthtml := parseWikiText(noLinks)
 
 	internalLinks := convertLinksToAnchors(perfecthtml)
@@ -396,6 +418,7 @@ func loadPageNoHtml(title string, userAgent string) (*EditPage, error) {
 	err = row.Scan(&title, &body, &updated_at)
 	if err != nil {
 		return nil, err
+
 	}
 	footer := "This page was last modified on " + formatDateTime(updated_at)
 	return &EditPage{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: removeUnderscores(title), Title: title, Body: template.HTML(body), Menu: template.HTML(safeMenu), Size: template.HTML(size), UpdatedDate: footer}, nil

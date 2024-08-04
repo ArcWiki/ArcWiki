@@ -68,7 +68,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request, title string, userAgen
 		//load menu
 		safeMenu, err := loadMenu()
 		if err != nil {
-			fmt.Println("error loading menu")
+			log.Error("error loading menu")
 		}
 
 		p := Page{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: "Admin panel", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink}
@@ -88,7 +88,8 @@ func manageCategory(userAgent string, baseURL string, w http.ResponseWriter) {
 
 	db, err := db.LoadDatabase()
 	if err != nil {
-		fmt.Println("Error opening database:", err)
+
+		log.Error("Database Error", err)
 		return
 
 	}
@@ -96,7 +97,8 @@ func manageCategory(userAgent string, baseURL string, w http.ResponseWriter) {
 
 	rows, err := db.Query("SELECT title FROM Categories")
 	if err != nil {
-		fmt.Println("Error finding categories from database:", err)
+
+		log.Error("Database Error", err)
 		return
 	}
 	defer rows.Close()
@@ -106,7 +108,8 @@ func manageCategory(userAgent string, baseURL string, w http.ResponseWriter) {
 		var title string
 		err := rows.Scan(&title)
 		if err != nil {
-			fmt.Println("Error getting categories rows from database", err)
+
+			log.Error("Database Error", err)
 			return
 
 		}
@@ -119,7 +122,7 @@ func manageCategory(userAgent string, baseURL string, w http.ResponseWriter) {
 
 	safeMenu, err := loadMenu()
 	if err != nil {
-		fmt.Println("error loading menu")
+		log.Info("error loading menu")
 	}
 
 	p := Page{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: "Manage Category", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu}
@@ -137,7 +140,7 @@ func managePages(userAgent string, baseURL string, w http.ResponseWriter) {
 
 	db, err := db.LoadDatabase()
 	if err != nil {
-		fmt.Println("Error loading database", err)
+		log.Error("Error loading database", err)
 		return
 
 	}
@@ -145,7 +148,8 @@ func managePages(userAgent string, baseURL string, w http.ResponseWriter) {
 
 	rows, err := db.Query("SELECT title FROM Pages")
 	if err != nil {
-		fmt.Println("Error getting Pages from database", err)
+
+		log.Error("Database Error", err)
 		return
 	}
 	defer rows.Close()
@@ -155,7 +159,7 @@ func managePages(userAgent string, baseURL string, w http.ResponseWriter) {
 		var title string
 		err := rows.Scan(&title)
 		if err != nil {
-			fmt.Println("Error getting rows of pages from the database", err)
+			log.Error("Database Error", err)
 			return
 
 		}

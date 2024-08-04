@@ -19,7 +19,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
@@ -49,10 +48,10 @@ func QueryHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Access form data from request object
 	query := r.FormValue("query")
-
-	log.WithFields(log.Fields{
-		"query": query,
-	}).Info("Search Form:")
+	log.Info("Search Query: ", query)
+	// log.WithFields(log.Fields{
+	// 	"query": query,
+	// }).Info("Search Form:")
 	//log.Info("", query)
 
 	// Get all titles from the database
@@ -144,8 +143,7 @@ func SearchHandler(w http.ResponseWriter, r *http.Request, title string, userAge
 		switch {
 
 		default:
-
-			fmt.Println("No category specified, defaulting to normal view")
+			log.Info("No category specified, defaulting to normal view")
 
 			// Load the page for standard title viewing
 			p, err := LoadNothing(title, userAgent)
@@ -160,7 +158,7 @@ func SearchHandler(w http.ResponseWriter, r *http.Request, title string, userAge
 
 		}
 	} else {
-		//fmt.Println("hello beautiful world")
+
 		// Load the page for standard title viewing
 		p, err := LoadNothing("Main_page", userAgent)
 		if err != nil {
