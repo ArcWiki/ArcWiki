@@ -1,13 +1,6 @@
 {
-    "admin": [
-      {
-        "username": "admin",
-        "password": "password"  
-      }
-    ],
     "siteTitle": "ArcWiki",
     "TColor": "#6a89a5",
-    "secretKey": "XAfSVt8LOP",
     "menu": [
       {
         "name": "Main page",

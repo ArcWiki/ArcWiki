@@ -409,10 +409,8 @@ func renderAddPageTemplate(w http.ResponseWriter, tmpl string, ap *AddPage) {
 }
 
 type Config struct {
-	Admin     []Admin    `json:"admin"`
 	SiteTitle string     `json:"siteTitle"`
 	TColor    string     `json:"TColor"`
-	SecretKey string     `json:"secretKey"`
 	Menu      []MenuItem `json:"menu"`
 }
 
@@ -439,72 +437,69 @@ func loadMenu() (template.HTML, error) {
 }
 
 func main() {
-	//start log
+	// Start log
 	log.SetFormatter(&log.TextFormatter{
 		DisableColors:   false,
 		FullTimestamp:   true,
 		TimestampFormat: "15:04:05",
 	})
-
-	// Only log the warning severity or above.
 	log.SetLevel(log.InfoLevel)
-	// A common pattern is to re-use fields between logging statements by re-using
-	// the logrus.Entry returned from WithFields()
-
 	log.Info("Starting your instance of ArcWiki")
 
-	// log.WithFields(log.Fields{
-	// 	"animal": "walrus",
-	// 	"size":   10,
-	// }).Info("A group of walrus emerges from the ocean")
-
-	// log.WithFields(log.Fields{
-	// 	"omg":    true,
-	// 	"number": 122,
-	// }).Warn("The group's number increased tremendously!")
-
-	// log.WithFields(log.Fields{
-	// 	"omg":    true,
-	// 	"number": 100,
-	// }).Fatal("The ice breaks!")
-
+	// Ensure the main application schema is up
 	db.DBSetup()
 
+	// Initialize the auth database
+	if err := InitAuthDB("arcWiki.db"); err != nil {
+		log.Fatalf("Auth DB init error: %v", err)
+	}
+
+	// Seed a single admin on first run
+	var userCount int
+	if err := authDB.QueryRow("SELECT COUNT(*) FROM users").Scan(&userCount); err != nil {
+		log.Fatalf("Unable to check users table: %v", err)
+	}
+	if userCount == 0 {
+		// Prefer Docker env variables, fall back to defaults
+		adminUser := os.Getenv("USERNAME")
+		adminPass := os.Getenv("PASSWORD")
+		if adminUser == "" || adminPass == "" {
+			log.Warn("No USERNAME/PASSWORD env vars found; defaulting to admin/admin")
+			adminUser = "admin"
+			adminPass = "admin"
+		}
+		if err := CreateUser(adminUser, adminPass, true); err != nil {
+			log.Fatalf("Seeding admin user failed: %v", err)
+		}
+		log.Infof("Seeded admin user '%s' (admin)", adminUser)
+	}
+
+	// Load site configuration
 	configBytes, err := os.ReadFile("config/config.json")
 	if err != nil {
-
-		log.Panic("Error Reading File:", err)
-
+		log.Panic("Error reading config/config.json:", err)
 	}
-
-	err = json.Unmarshal(configBytes, &config)
-	if err != nil {
-		panic(err)
-		log.Warn("Error unmarshalling File:", err)
+	if err := json.Unmarshal(configBytes, &config); err != nil {
+		log.Panic("Error parsing config:", err)
 	}
-
 	if os.Getenv("COLOR") != "" {
 		config.TColor = os.Getenv("COLOR")
 	}
 	if os.Getenv("SITENAME") != "" {
 		config.SiteTitle = os.Getenv("SITENAME")
 	}
-	//fmt.Println(config.Admin[0].Username)
 
-	//	log.Info("Starting your instance of ArcWiki called:", config.SiteTitle)
-
+	// Background updater
 	go func() {
 		for {
-
 			if err := updateSubCategoryLinks(); err != nil {
-				// Handle error
 				log.Error("Error updating subcategories:", err)
-				//fmt.Println("Error updating subcategories:", err)
 			}
 			time.Sleep(60 * time.Second)
 		}
 	}()
 
+	// HTTP routes
 	http.HandleFunc("/", makeHandler(viewHandler))
 	http.HandleFunc("/search", makeHandler(SearchHandler))
 	http.HandleFunc("/query", QueryHandler)
@@ -522,9 +517,9 @@ func main() {
 	http.HandleFunc("/save/", makeHandler(saveHandler))
 	http.HandleFunc("/error", errorPage)
 
+	// Static assets
 	fs := http.FileServer(http.Dir("./assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
-
 }
