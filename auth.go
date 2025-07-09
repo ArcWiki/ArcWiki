@@ -1,20 +1,3 @@
-/*
- *   Copyright (c) 2024 Edward Stock
- *
- *   This program is free software: you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation, either version 3 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 package main
 
 import (
@@ -78,32 +61,18 @@ func init() {
 	}
 }
 
-// InitAuthDB opens (or creates) arcWiki.db and ensures users table exists.
+// InitAuthDB simply opens the database and checks connectivity.
+// All schema creation happens in db/database.go.
 func InitAuthDB(path string) error {
 	var err error
 	authDB, err = sql.Open("sqlite3", path)
 	if err != nil {
 		return err
 	}
-	// Create or migrate the users table
-	_, err = authDB.Exec(`
-		 CREATE TABLE IF NOT EXISTS users (
-			 id        INTEGER PRIMARY KEY AUTOINCREMENT,
-			 username  TEXT    NOT NULL UNIQUE,
-			 password  TEXT    NOT NULL
-		 );`)
-	if err != nil {
-		return err
-	}
-	// Add is_admin column if missing
-	_, err = authDB.Exec(`ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0;`)
-	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
-		return err
-	}
-	return nil
+	return authDB.Ping()
 }
 
-// CreateUser inserts a bcrypt-hashed user. No-op if username exists.
+// CreateUser inserts a bcrypt-hashed user; no-op if username exists.
 func CreateUser(username, plainPassword string, isAdmin bool) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(plainPassword), bcrypt.DefaultCost)
 	if err != nil {
@@ -119,13 +88,12 @@ func CreateUser(username, plainPassword string, isAdmin bool) error {
 	return nil
 }
 
-// Authenticate checks credentials; returns (ok, isAdmin, error).
+// Authenticate verifies credentials and returns (ok, isAdmin, error).
 func Authenticate(username, plainPassword string) (bool, bool, error) {
 	var storedHash string
 	var isAdminInt int
 	err := authDB.QueryRow(
-		"SELECT password,is_admin FROM users WHERE username = ?",
-		username,
+		"SELECT password,is_admin FROM users WHERE username = ?", username,
 	).Scan(&storedHash, &isAdminInt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -150,25 +118,24 @@ func isUniqueConstraintError(err error) bool {
 	return strings.Contains(err.Error(), "UNIQUE constraint failed")
 }
 
-// Presents the login form
+/* ---------------- HTTP Handlers ---------------- */
+
 func loginFormHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
-	size := ""
-	if userAgent == Desktop {
-		size = `<div class="col-11 d-none d-sm-block">`
-	} else {
+	size := `<div class="col-11 d-none d-sm-block">`
+	if userAgent == Mobile {
 		size = `<div class="col-12 d-block d-sm-none">`
 	}
 	bodyMark := `<form action="/loginPost" method="post">
-		 <div class="form-group">
-		   <label for="username">Username:</label>
-		   <input class="form-control" type="text" id="username" name="username">
-		 </div>
-		 <div class="form-group">
-		   <label for="password">Password:</label>
-		   <input class="form-control" type="password" id="password" name="password">
-		 </div>
-		 <button class="bg-dark hover:bg-gray-100 text-white font-semibold py-2 px-4 border border-gray-400 rounded shadow" type="submit">Login</button>
-	 </form>`
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input class="form-control" type="text" id="username" name="username">
+        </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input class="form-control" type="password" id="password" name="password">
+        </div>
+        <button class="bg-dark hover:bg-gray-100 text-white font-semibold py-2 px-4 border border-gray-400 rounded shadow" type="submit">Login</button>
+    </form>`
 
 	parsedText := addHeadingIDs(bodyMark)
 	happyhtml := createHeadingList(parsedText)
@@ -197,7 +164,6 @@ func loginFormHandler(w http.ResponseWriter, r *http.Request, title string, user
 	renderTemplate(w, "login", &p)
 }
 
-// Logs the user out by clearing the session
 func logout(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
 	session, _ := store.Get(r, "cookie-name")
 	session.Values["authenticated"] = false
@@ -205,7 +171,6 @@ func logout(w http.ResponseWriter, r *http.Request, title string, userAgent stri
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-// Processes login submissions
 func loginHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
 	if r.Method != http.MethodPost {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -213,6 +178,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request, title string, userAgen
 	}
 	user := r.FormValue("username")
 	pass := r.FormValue("password")
+
 	ok, isAdmin, err := Authenticate(user, pass)
 	if err != nil {
 		log.Errorf("auth error: %v", err)
@@ -223,10 +189,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request, title string, userAgen
 		http.Redirect(w, r, "/error", http.StatusSeeOther)
 		return
 	}
+
 	session, _ := store.Get(r, "cookie-name")
 	session.Values["authenticated"] = true
 	session.Values["is_admin"] = isAdmin
 	session.Save(r, w)
+
 	log.Infof("Logged in: %s (admin=%v)", user, isAdmin)
 	http.Redirect(w, r, "/admin", http.StatusFound)
 }
