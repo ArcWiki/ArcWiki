@@ -150,7 +150,7 @@ func SearchHandler(w http.ResponseWriter, r *http.Request, title string, userAge
 			if err != nil {
 				log.Error("viewHandler: Something weird happened:", err)
 
-				http.Redirect(w, r, "/title/Main_page", http.StatusFound)
+				http.Redirect(w, r, "/title/Main_Page", http.StatusFound)
 				return
 			}
 
@@ -160,10 +160,10 @@ func SearchHandler(w http.ResponseWriter, r *http.Request, title string, userAge
 	} else {
 
 		// Load the page for standard title viewing
-		p, err := LoadNothing("Main_page", userAgent)
+		p, err := LoadNothing("Main_Page", userAgent)
 		if err != nil {
 			log.Error("Viewer handler something odd happened:", err)
-			//http.Redirect(w, r, "/title/Main_page", http.StatusFound)
+			//http.Redirect(w, r, "/title/Main_Page", http.StatusFound)
 			return
 		}
 		renderTemplate(w, "search", p)

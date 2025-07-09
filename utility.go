@@ -23,11 +23,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/ArcWiki/ArcWiki/db"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func arcWikiLogo() string {
@@ -162,44 +162,19 @@ func updateSubCategoryLinks() error {
 }
 
 func canonicalizeTitle(text string) string {
-	// Language-specific processing (optional)
-	// - If handling non-Latin scripts, use Transliterate() (or similar) from a library
-	// - Adjust title case conversion based on language if necessary
-
-	// Lowercase and normalize whitespace
-	//title = strings.ToLower(strings.Trim(title, " \t\n"))
-	caser := cases.Title(language.English)
-	title := caser.String(text)
-	// Handle '&' based on context
-	title = regexp.MustCompile(`(?i)(&\w+)`).ReplaceAllStringFunc(title, func(match string) string {
-		word := strings.TrimLeft(match, "&")
-		if isMinorWord(word) || isPreposition(word) { // Check minor words and prepositions
-			return "&" + word
-		}
-		return "And" + strings.ToLower(word) // Replace for other words
-	})
-
-	// Handle apostrophes within words
-	// Replace leading and trailing apostrophes with underscores
-	if title[0] == '\'' {
-		title = "" + title[1:]
-	}
-	if title[len(title)-1] == '\'' {
-		title = title[:len(title)-1] + ""
+	text = strings.TrimSpace(text)
+	text = strings.ReplaceAll(text, " ", "_")
+	if text == "" {
+		return text
 	}
 
-	// Replace spaces with underscores
-	title = strings.ReplaceAll(title, " ", "_")
-
-	// Remove other punctuation (except hyphens)
-	title = regexp.MustCompile(`[^\w\-'_]+`).ReplaceAllString(title, "")
-
-	// Convert non-alphanumeric characters to underscores (optional)
-	// ReplaceAllString(title, unicode.ReplacementChar, "_")
-
-	// Title case conversion
-
-	return title
+	// Uppercase only the first character, leave the rest untouched
+	firstRune, size := utf8.DecodeRuneInString(text)
+	if firstRune == utf8.RuneError {
+		return text // bad input
+	}
+	firstUpper := string(unicode.ToUpper(firstRune))
+	return firstUpper + text[size:]
 }
 
 func isMinorWord(word string) bool {

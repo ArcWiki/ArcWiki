@@ -69,98 +69,93 @@ type EditPage struct {
 }
 
 func (p *Page) save() error {
+	log.Info("Saving page: " + canonicalizeTitle(p.Title))
 
-	log.Info("the page saved was called " + canonicalizeTitle(p.Title))
 	db, err := db.LoadDatabase()
 	if err != nil {
-		log.Error("Database Error:", err)
-
+		log.Error("Database load error:", err)
+		return err
 	}
 	defer db.Close()
 
-	tx, err := db.Begin() // Start transaction
+	tx, err := db.Begin()
 	if err != nil {
-		log.Error("error starting transaction: %w", err)
-
+		log.Error("Transaction begin error:", err)
+		return err
 	}
 	defer func() {
-		if err != nil { // Rollback on any error
+		if err != nil {
 			_ = tx.Rollback()
 		}
 	}()
 
-	stmt, err := tx.Prepare("UPDATE Pages SET title = ?, body = ?, updated_at = CURRENT_TIMESTAMP WHERE title = ?")
-	if err != nil {
-		log.Error("error starting transaction: %w", err)
+	title := canonicalizeTitle(p.Title)
 
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(canonicalizeTitle(p.Title), string(p.Body), canonicalizeTitle(p.Title)) // Ignore RowsAffected
-	if err != nil {
-		log.Error("error starting transaction: %w", err)
-
-	}
-
-	// Prepare a list of category IDs to insert based on match[1]
-	var categoryIDsToInsert []int
-	regex := regexp.MustCompile(`\[Category:([^\]|]*)\]`)
-	matches := regex.FindAllStringSubmatch(string(p.Body), -1) // Find all matches
-
-	// Check if the page exists before fetching ID
 	var pageID int
-	// Check if the page exists before fetching ID
-	row := tx.QueryRow("SELECT id FROM Pages WHERE title = ?", canonicalizeTitle(p.Title))
-	err = row.Scan(&pageID)
-	if err != nil {
-		if err == sql.ErrNoRows {
+	err = tx.QueryRow("SELECT id FROM Pages WHERE title = ?", title).Scan(&pageID)
 
-			log.Error("page with title", canonicalizeTitle(p.Title)+" not found")
+	if err == sql.ErrNoRows {
+		// INSERT new page
+		log.Info("Page not found, inserting new:", title)
+		res, err := tx.Exec(
+			"INSERT INTO Pages (title, body, user_id, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+			title, string(p.Body), 1,
+		)
+		if err != nil {
+			log.Error("Insert error:", err)
+			return err
 		}
-		log.Error("error checking for existing page:", err)
-
+		lastID, _ := res.LastInsertId()
+		pageID = int(lastID)
+		log.Info("Inserted new page with ID:", pageID)
+	} else if err != nil {
+		log.Error("Error checking for page existence:", err)
+		return err
+	} else {
+		// UPDATE existing page
+		_, err = tx.Exec(
+			"UPDATE Pages SET body = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+			string(p.Body), pageID,
+		)
+		if err != nil {
+			log.Error("Update error:", err)
+			return err
+		}
+		log.Info("Updated page with ID:", pageID)
 	}
+
+	// Remove previous category links
 	_, err = tx.Exec("DELETE FROM CategoryPages WHERE page_id = ?", pageID)
 	if err != nil {
-		log.Error("Error deleting existing category links:", err)
-
-		// Consider returning an error or logging the error and continuing
-	}
-	for _, matchedCategory := range matches {
-		var categoryID int
-		err := tx.QueryRow("SELECT id FROM Categories WHERE title = ?", matchedCategory[1]).Scan(&categoryID)
-		if err != nil {
-			log.Error("Error fetching category ID:", err)
-
-			continue // Skip to next category if error occurs
-		}
-		categoryIDsToInsert = append(categoryIDsToInsert, categoryID)
+		log.Error("Error clearing old category links:", err)
 	}
 
-	// Batch insert new category links (adjusted for current page only)
-	for _, categoryID := range categoryIDsToInsert {
-
-		_, err = tx.Exec("INSERT INTO CategoryPages (page_id, category_id) VALUES (?, ?)", pageID, categoryID)
-
-		log.Info("Inserting Category links", pageID, categoryID)
-		if err != nil {
-
-			log.Error("Database Error:", err)
-			log.Error("Error Inserting Category Links", err)
-
-			_ = tx.Rollback() // Explicit rollback on error
-
-			log.Error("Error inserting category link:", err)
-
+	// Match categories in content
+	var categoryIDs []int
+	re := regexp.MustCompile(`\[Category:([^\]|]*)\]`)
+	for _, match := range re.FindAllStringSubmatch(string(p.Body), -1) {
+		var catID int
+		if err := tx.QueryRow("SELECT id FROM Categories WHERE title = ?", match[1]).Scan(&catID); err == nil {
+			categoryIDs = append(categoryIDs, catID)
+		} else {
+			log.Warnf("Unknown category: %s", match[1])
 		}
 	}
 
-	// Commit the transaction only once after successful insertions
-	err = tx.Commit()
-	if err != nil {
-		log.Error("Error committing transaction:", err)
+	for _, cid := range categoryIDs {
+		_, err := tx.Exec("INSERT INTO CategoryPages (page_id, category_id) VALUES (?, ?)", pageID, cid)
+		if err != nil {
+			log.Error("Error linking category:", err)
+			return tx.Rollback()
+		}
 	}
-	log.Info("Updated page with title:", canonicalizeTitle(p.Title)) // Clearer message
+
+	if err := tx.Commit(); err != nil {
+		log.Error("Commit failed:", err)
+		return err
+	}
+
+	log.Infof("Successfully saved page: %s", title)
 	return nil
 }
 

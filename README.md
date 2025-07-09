@@ -9,6 +9,7 @@
 # ArcWiki
 [![Docker Pulls](https://img.shields.io/docker/pulls/spanglesontoast/arcwiki)](https://hub.docker.com/r/spanglesontoast/arcwiki)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat)](https://github.com/requarks/wiki/blob/master/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ArcWiki/ArcWiki)](https://goreportcard.com/report/github.com/ArcWiki/ArcWiki)
 ##### A community-driven Go wiki inspired by ArchWiki.
 
 ## Usage

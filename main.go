@@ -56,7 +56,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 
 			p, err := loadPage("Help-"+specialPageName, userAgent)
 			if err != nil {
-				log.Error("Error Occured in:", specialPageName)
+				log.Error("Error Occurred in:", specialPageName)
 
 				http.Redirect(w, r, "/", http.StatusFound)
 				return
@@ -109,7 +109,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 			if err != nil {
 				log.Error("Error Occurred in:", err)
 
-				//fmt.Println("Error Occured in:", specialPageName)
+				//fmt.Println("Error Occurred in:", specialPageName)
 				//http.Redirect(w, r, "/edit/"+title, http.StatusFound)
 
 			}
@@ -135,7 +135,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 			p, err := loadPage(title, userAgent)
 			if err != nil {
 				log.Error("viewHandler: Something weird happened")
-				http.Redirect(w, r, "/title/Main_page", http.StatusFound)
+				http.Redirect(w, r, "/title/Main_Page", http.StatusFound)
 				return
 			}
 
@@ -145,10 +145,10 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 	} else {
 		//fmt.Println("hello beautiful world")
 		// Load the page for standard title viewing
-		p, err := loadPage("Main_page", userAgent)
+		p, err := loadPage("Main_Page", userAgent)
 		if err != nil {
 			log.Error("viewHandler: Something weird happened")
-			http.Redirect(w, r, "/title/Main_page", http.StatusFound)
+			http.Redirect(w, r, "/title/Main_Page", http.StatusFound)
 			return
 		}
 		renderTemplate(w, "title", p)
@@ -387,7 +387,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 
 	err := templates.ExecuteTemplate(w, tmpl+".html", p)
 	if err != nil {
-		log.Error("Error Occured in renderTemplate: ", err)
+		log.Error("Error Occurred in renderTemplate: ", err)
 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -395,7 +395,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 func renderEditPageTemplate(w http.ResponseWriter, tmpl string, ep *EditPage) {
 	err := templates.ExecuteTemplate(w, tmpl+".html", ep)
 	if err != nil {
-		log.Error("Error Occured in renderEditPageTemplate: ", err)
+		log.Error("Error Occurred in renderEditPageTemplate: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -403,7 +403,7 @@ func renderEditPageTemplate(w http.ResponseWriter, tmpl string, ep *EditPage) {
 func renderAddPageTemplate(w http.ResponseWriter, tmpl string, ap *AddPage) {
 	err := templates.ExecuteTemplate(w, tmpl+".html", ap)
 	if err != nil {
-		log.Error("Error Occured in renderEditPageTemplate: ", err)
+		log.Error("Error Occurred in renderEditPageTemplate: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

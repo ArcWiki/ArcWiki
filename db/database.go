@@ -1,7 +1,3 @@
-/*
- *   Copyright (c) 2025
- *   All rights reserved.
- */
 package db
 
 import (
@@ -83,7 +79,7 @@ func DBSetup() {
 		}
 		if _, err := db.Exec(
 			`INSERT OR IGNORE INTO Pages(title,body,user_id,created_at,updated_at) VALUES(?,?,?,?,?)`,
-			"Main_page",
+			"Main_Page",
 			"## Welcome to ArcWiki\nlet the games begin",
 			1,
 			time.Now(),
