@@ -26,3 +26,4 @@ go.work.sum
 #remove workspace
 gowiki.code-workspace
 wiki.backup
+.env
