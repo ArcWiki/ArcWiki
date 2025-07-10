@@ -40,27 +40,48 @@ const Mobile = "mobile"
 
 // var validPath = regexp.MustCompile("^/(?:(add|addpage|cat|edit|save|title|Category|Special)/([a-zA-Z0-9]+)|)")
 // var validPath = regexp.MustCompile("^/(?:(add|addpage|cat|edit|save|title|Category|Special)/([a-zA-Z0-9_-]+)|)")
-var validPath = regexp.MustCompile("^/(?:(search|results|admin|add|addpage|edit|delete|savecat|save|title|login|Category|Special)/([a-zA-Z0-9'_-]+)|)")
+// var validPath = regexp.MustCompile(`^/(search|results|admin|add|addpage|edit|delete|savecat|save|title|login|Category|Special)(?:/([^/?#]+))?$`)
+var allowedPaths = []string{
+	"search", "results", "admin", "add", "addpage", "edit", "delete",
+	"savecat", "save", "title", "login", "loginPost", "logout", "Category", "Special",
+}
+
+var validPath = regexp.MustCompile("^/(" + strings.Join(allowedPaths, "|") + `)(?:/([^/?#]+))?$`)
 
 func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
+	path := r.URL.Path
 	category := ""
-	if strings.HasPrefix(r.URL.Path, "/title/") {
-		category = strings.TrimPrefix(r.URL.Path, "/title/")
+
+	if strings.HasPrefix(path, "/title/") {
+		category = strings.TrimPrefix(path, "/title/")
+	} else {
+		category = title
 	}
-	log.WithFields(log.Fields{"title": title, "category": category}).Debug("ViewHandler called")
+
+	log.WithFields(log.Fields{
+		"path":     path,
+		"title":    title,
+		"category": category,
+	}).Debug("ViewHandler called")
 
 	switch {
+
 	case category == "":
 		log.Info("No title/category given. Falling back to Main_Page.")
 		renderOrRedirect(w, r, "Main_Page", userAgent)
+
 	case strings.HasPrefix(category, "Help:"):
 		handleHelpPage(w, r, category, userAgent)
+
 	case strings.HasPrefix(category, "Special:Random"):
 		handleRandomPage(w, r)
+
 	case strings.HasPrefix(category, "Special:"):
 		handleSpecialPage(w, r, category, userAgent)
+
 	case strings.Contains(category, ":"):
 		handleCategoryPage(w, r, title, category, userAgent)
+
 	default:
 		renderOrRedirect(w, r, title, userAgent)
 	}
@@ -110,7 +131,8 @@ func handleCategoryPage(w http.ResponseWriter, r *http.Request, title, category,
 		return
 	}
 	categoryName := strings.TrimSpace(parts[1])
-	p, err := loadPageCategory(title, categoryName, userAgent)
+	p, err := loadPageCategory(categoryName, userAgent)
+
 	if err != nil {
 		log.WithError(err).WithField("category", categoryName).Error("Failed to load category")
 		http.Redirect(w, r, "/", http.StatusFound)
@@ -175,10 +197,20 @@ func editHandler(w http.ResponseWriter, r *http.Request, title string, userAgent
 		} else {
 
 			ep, err := loadPageNoHtml(title, userAgent)
-
 			if err != nil {
-				ep = &EditPage{CTitle: removeUnderscores(title), Title: title, Size: template.HTML(size)}
+				safeMenu, _ := loadMenu()
+				ep = &EditPage{
+					NavTitle:    config.SiteTitle,
+					ThemeColor:  template.HTML(arcWikiLogo()),
+					CTitle:      removeUnderscores(title),
+					Title:       title,
+					Body:        template.HTML(""),
+					Menu:        safeMenu,
+					Size:        template.HTML(size),
+					UpdatedDate: "Not yet created",
+				}
 			}
+
 			renderEditPageTemplate(w, "edit", ep)
 		}
 	}
@@ -200,31 +232,27 @@ func saveCatHandler(w http.ResponseWriter, r *http.Request, title string, userAg
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request, string, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		cleanPath := strings.TrimSuffix(r.URL.Path, "/")
 
-		detect := mobiledetect.New(r, nil)
-		userAgent := Desktop
-		if detect.IsMobile() || detect.IsTablet() {
-			userAgent = Mobile
-		}
-
-		m := validPath.FindStringSubmatch(r.URL.Path)
-		if m == nil {
-			http.NotFound(w, r)
-			log.WithField("path", r.URL.Path).Error("Handler Error: path did not match validPath regex")
+		// Special case: root path ("/") → treat as Main_Page
+		if cleanPath == "" {
+			fn(w, r, "Main_Page", getUserAgent(r))
 			return
 		}
 
-		// ✅ Safely extract title
-		title := ""
-		if len(m) > 2 {
-			title = m[2]
+		m := validPath.FindStringSubmatch(cleanPath)
+		if m == nil {
+			log.Errorf("Handler Error: path did not match validPath regex  path=%q", r.URL.Path)
+			http.NotFound(w, r)
+			return
 		}
 
-		// ✅ Log what was matched
-		log.Infof("makeHandler matched path '%s' with title='%s'", r.URL.Path, title)
+		title := m[2]
+		if title == "" && (m[1] == "admin" || m[1] == "search" || m[1] == "login") {
+			title = m[1] // treat route as the title
+		}
+		fn(w, r, title, getUserAgent(r))
 
-		// ✅ Call the actual handler
-		fn(w, r, title, userAgent)
 	}
 }
 
@@ -349,7 +377,7 @@ func dbsql(stater string, args ...interface{}) error {
 }
 
 // moved here for ease
-var templates = template.Must(template.ParseFiles("templates/search.html", "templates/header.html", "templates/footer.html", "templates/navbar.html", "templates/edit.html", "templates/title.html", "templates/add.html", "templates/login.html", "templates/editCategory.html", "templates/errorPage.html"))
+var templates = template.Must(template.ParseFiles("templates/search.html", "templates/header.html", "templates/footer.html", "templates/navbar.html", "templates/edit.html", "templates/title.html", "templates/add.html", "templates/login.html", "templates/editCategory.html", "templates/errorPage.html", "templates/admin.html"))
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 
@@ -468,6 +496,12 @@ func main() {
 	}()
 
 	// HTTP routes
+	http.HandleFunc("/admin", requireLogin(func(w http.ResponseWriter, r *http.Request) {
+		adminHandler(w, r, "", getUserAgent(r))
+	}))
+
+	// Handle /admin/page and /admin/category
+	http.HandleFunc("/admin/", requireLogin(makeHandler(adminHandler)))
 	http.HandleFunc("/", makeHandler(viewHandler))
 	http.HandleFunc("/search", makeHandler(SearchHandler))
 	http.HandleFunc("/query", QueryHandler)
@@ -476,8 +510,10 @@ func main() {
 	http.HandleFunc("/delete/", deleteHandler)
 	http.HandleFunc("/category/", addCat)
 	http.HandleFunc("/savecat/", makeHandler(saveCatHandler))
-	http.HandleFunc("/admin/", makeHandler(adminHandler))
+
 	http.HandleFunc("/logout", makeHandler(logout))
+	http.HandleFunc("/logout/", makeHandler(logout)) // handle trailing slash
+
 	http.HandleFunc("/login", makeHandler(loginFormHandler))
 	http.HandleFunc("/loginPost", makeHandler(loginHandler))
 	http.HandleFunc("/title/", makeHandler(viewHandler))

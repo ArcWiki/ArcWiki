@@ -1,3 +1,7 @@
+/*
+ *   Copyright (c) 2025
+ *   All rights reserved.
+ */
 package main
 
 import (
@@ -12,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/sessions"
+	"github.com/houseme/mobiledetect"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 	log "github.com/sirupsen/logrus"
@@ -70,6 +75,28 @@ func InitAuthDB(path string) error {
 		return err
 	}
 	return authDB.Ping()
+}
+func requireLogin(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		session, _ := store.Get(r, "cookie-name")
+		auth, ok := session.Values["authenticated"].(bool)
+
+		if !ok || !auth {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+
+		next(w, r)
+	}
+}
+
+// getUserAgent helper
+func getUserAgent(r *http.Request) string {
+	detect := mobiledetect.New(r, nil)
+	if detect.IsMobile() || detect.IsTablet() {
+		return Mobile
+	}
+	return Desktop
 }
 
 // CreateUser inserts a bcrypt-hashed user; no-op if username exists.

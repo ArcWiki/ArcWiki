@@ -45,91 +45,106 @@ type SearchData struct {
 }
 
 func QueryHandler(w http.ResponseWriter, r *http.Request) {
-
-	// Access form data from request object
-	query := r.FormValue("query")
+	query := strings.ToLower(strings.TrimSpace(r.FormValue("query")))
 	log.Info("Search Query: ", query)
-	// log.WithFields(log.Fields{
-	// 	"query": query,
-	// }).Info("Search Form:")
-	//log.Info("", query)
 
-	// Get all titles from the database
+	if query == "" {
+		http.Redirect(w, r, "/search", http.StatusFound)
+		return
+	}
 
-	db, err := db.LoadDatabase()
+	dbConn, err := db.LoadDatabase()
 	if err != nil {
 		log.Error("Database Error:", err)
+		http.Error(w, "Internal DB error", http.StatusInternalServerError)
+		return
 	}
-	rows, err := db.Query("SELECT title, body FROM Pages WHERE title LIKE ?", "%"+query+"%")
+	defer dbConn.Close()
+
+	// Normalize query input: allow underscores, spaces, and lowercase matching
+	likeQuery := "%" + strings.ReplaceAll(query, " ", "_") + "%"
+	altLikeQuery := "%" + strings.ReplaceAll(query, "_", " ") + "%"
+
+	stmt, err := dbConn.Prepare(`
+		SELECT title, body 
+		FROM Pages 
+		WHERE LOWER(title) LIKE LOWER(?) 
+		OR LOWER(title) LIKE LOWER(?)
+		OR LOWER(REPLACE(title, '_', ' ')) LIKE LOWER(?)
+	`)
 	if err != nil {
-		// Handle error
+		log.Error("Failed to prepare query:", err)
+		http.Error(w, "Search error", http.StatusInternalServerError)
+		return
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(likeQuery, altLikeQuery, "%"+query+"%")
+	if err != nil {
+		log.Error("Failed to run search query:", err)
+		http.Error(w, "Search execution error", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	defer rows.Close() // Close the rows after iterating
-	safeMenu, err := loadMenu()
-	if err != nil {
-		log.Error("Error Loading Menu:", err)
-	}
-	userAgent := ""
-	size := ""
 	detect := mobiledetect.New(r, nil)
-
-	if detect.IsMobile() || detect.IsTablet() {
-		log.Debug("is either mobile or tablet")
-
-		userAgent = Mobile
-	} else {
+	userAgent := Mobile
+	if !detect.IsMobile() && !detect.IsTablet() {
 		userAgent = Desktop
 	}
+
+	size := ""
 	if userAgent == Desktop {
 		size = "<div class=\"col-11 d-none d-sm-block\">"
 	} else {
 		size = "<div class=\"col-12 d-block d-sm-none\">"
 	}
-	var data = SearchData{
+
+	safeMenu, err := loadMenu()
+	if err != nil {
+		log.Error("Error loading menu:", err)
+	}
+
+	searchResults := SearchData{
 		ThemeColor: template.HTML(arcWikiLogo()),
 		Size:       template.HTML(size),
 		Menu:       safeMenu,
 		NavTitle:   config.SiteTitle,
-		CTitle:     "Search",
+		CTitle:     "Search Results",
 	}
 
 	for rows.Next() {
 		var result Result
-		err := rows.Scan(&result.Title, &result.Body)
-		if err != nil {
-			log.Error("Error with searching database:", err)
+		if err := rows.Scan(&result.Title, &result.Body); err != nil {
+			log.Error("Row scan error:", err)
+			continue
 		}
-		words := strings.Fields(result.Body) // Split on whitespace
-		if len(words) > 7 {                  // Adjust limit as needed (7 words in this example)
-			result.Body = strings.Join(words[:7], " ") + "..." // Join limited words and add ellipsis
+		words := strings.Fields(result.Body)
+		if len(words) > 7 {
+			result.Body = strings.Join(words[:7], " ") + "..."
 		} else {
-			result.Body = strings.Join(words, " ") // Join all words if under limit
+			result.Body = strings.Join(words, " ")
 		}
-		data.Results = append(data.Results, result)
+		searchResults.Results = append(searchResults.Results, result)
 	}
 
-	templates := template.New("") // Create a new template set
-	templates, err = templates.ParseFiles("templates/results.html", "templates/navbar.html", "templates/header.html", "templates/footer.html")
+	tmpls := template.New("")
+	tmpls, err = tmpls.ParseFiles(
+		"templates/results.html",
+		"templates/navbar.html",
+		"templates/header.html",
+		"templates/footer.html",
+	)
 	if err != nil {
-		// Handle template parsing error
-		log.Error("Error parsing templates:", err)
+		log.Error("Template parsing failed:", err)
+		http.Error(w, "Template error", http.StatusInternalServerError)
+		return
 	}
 
-	// Execute the relevant template with data
-	err = templates.ExecuteTemplate(w, "results.html", data) // Assuming search results are in "results"
-	if err != nil {
-		log.Error("Error executing templates:", err)
+	if err := tmpls.ExecuteTemplate(w, "results.html", searchResults); err != nil {
+		log.Error("Template execution failed:", err)
+		http.Error(w, "Template rendering error", http.StatusInternalServerError)
 	}
-
-	//renderTemplate(w, "search", p)
-
-	//return &Search{Rtitle: titles, Rbody: bodies}, nil
-
-	//return titles, nil
-
 }
 
 func SearchHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {

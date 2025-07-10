@@ -29,55 +29,45 @@ import (
 
 func adminHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
 	baseURL := "/title/"
-	if title == "page" {
-		managePages(userAgent, baseURL, w) // Pass only the body string
 
-	} else if title == "category" {
+	switch title {
+	case "page":
+		managePages(userAgent, baseURL, w)
+		return
+
+	case "category":
 		manageCategory(userAgent, baseURL, w)
-	} else {
-		size := ""
+		return
 
+	default:
+		// Mobile/Desktop wrapper size
+		size := ""
 		if userAgent == Desktop {
 			size = "<div class=\"col-11 d-none d-sm-block\">"
 		} else {
 			size = "<div class=\"col-12 d-block d-sm-none\">"
 		}
 
-		bodyMark :=
-			`
-		<div class="row">
-				<div class="col-xs-6 col-md-6">
-			<a class="btn btn-sm btn-outline-secondary" href="/add"> Add Page </a>
-			<a class="btn btn-sm btn-outline-secondary" href="/admin/page"> Manage Pages </a>
-			<a class="btn btn-sm btn-outline-secondary" href="/admin/category"> Manage Category </a>
-			<a class="btn btn-sm btn-outline-secondary" href="/logout"> Logout </a>
-			</div>
-		</div>
-		`
-		//bodyMark := markdown.ToHTML([]byte(readBody), nil, nil)
-		//bodyMark := "hey hey"
-		parsedText := addHeadingIDs(string(bodyMark))
-		//parsedText := addHeadingIDs(parseToc(parseLink(parseWikiText(string(bodyMark)))))
-		happyhtml := createHeadingList(parsedText)
-		//This grabs all Category links
-		categoryLink := findAllCategoryLinks(happyhtml)
-		noLinks := removeCategoryLinks(happyhtml)
-		perfecthtml := parseWikiText(noLinks)
-		internalLinks := convertLinksToAnchors(perfecthtml)
-		safeBodyHTML := template.HTML(internalLinks)
-		//load menu
+		// Load menu
 		safeMenu, err := loadMenu()
 		if err != nil {
 			log.Error("error loading menu")
 		}
 
-		p := Page{NavTitle: config.SiteTitle, ThemeColor: template.HTML(arcWikiLogo()), CTitle: "Admin panel", Title: "admin", Body: safeBodyHTML, Size: template.HTML(size), Menu: safeMenu, CategoryLink: categoryLink}
+		p := Page{
+			NavTitle:     config.SiteTitle,
+			ThemeColor:   template.HTML(arcWikiLogo()),
+			CTitle:       "Admin Panel",
+			Title:        "admin",
+			Size:         template.HTML(size),
+			Menu:         safeMenu,
+			CategoryLink: nil, // Set if needed
+		}
 
-		// Assuming renderTemplate accepts a string for body content:
-		renderTemplate(w, "title", &p) // Pass only the body string
+		renderTemplate(w, "admin", &p)
 	}
-
 }
+
 func manageCategory(userAgent string, baseURL string, w http.ResponseWriter) {
 	size := ""
 	if userAgent == Desktop {

@@ -180,48 +180,58 @@ func checkCategoryExistence(categoryName string) bool {
 }
 
 // displays categories and sub-categories on the Category:somename page
-func loadPageCategory(title string, categoryName string, userAgent string) (*Page, error) {
+func loadPageCategory(categoryName string, userAgent string) (*Page, error) {
+	// Determine layout size
 	size := ""
 	if userAgent == Desktop {
-		size = "<div class=\"col-11 d-none d-sm-block\">"
+		size = `<div class="col-11 d-none d-sm-block">`
 	} else {
-		size = "<div class=\"col-12 d-block d-sm-none\">"
-	}
-	safeMenu, err := loadMenu() // Replace with your menu loading logic
-	if err != nil {
-		log.Error("error loading menu")
-		//return nil, err
+		size = `<div class="col-12 d-block d-sm-none">`
 	}
 
-	// Gather matching pages
+	// Load site menu
+	safeMenu, err := loadMenu()
+	if err != nil {
+		log.Error("Error loading menu:", err)
+	}
+
+	// Find matching pages and subcategories
 	matchingPages := findPagesInCategory(categoryName)
 	matchingSubCatPages := loadLinksFromSubCategoryFile(categoryName)
+	log.Infof("Subcategories for '%s': %+v", categoryName, matchingSubCatPages)
 
-	log.Info("Current Matching Sub Cat Pages", matchingSubCatPages)
-	// Format bodyHTML based on matching pages
+	// Format lists
 	categories := formatPageList(matchingPages)
 	subcategories := formatSubCatList(matchingSubCatPages)
+
+	// Assemble body content
+	var bodyHTML strings.Builder
 	if checkCategoryExistence(categoryName) {
 		if subcategories != "" {
-			subcategories = "<h2 class=\"wikih2\"> Subcategories </h2>" + subcategories
+			bodyHTML.WriteString(`<h2 class="wikih2">Subcategories</h2>`)
+			bodyHTML.WriteString(subcategories)
 		}
 		if categories != "" {
-			categories = "<h2 class=\"wikih2\"> Pages in category </h2>" + categories
+			bodyHTML.WriteString(`<h2 class="wikih2">Pages in category</h2>`)
+			bodyHTML.WriteString(categories)
 		} else {
-			categories = "<p>This category currently contains no pages or media. </p>"
+			bodyHTML.WriteString(`<p>This category currently contains no pages or media.</p>`)
 		}
 	} else {
-		categories = "<a style=\"color:red\" href=\"/category/" + categoryName + "\"> Add This Category</a>"
-
+		// Offer to create category if it doesn't exist
+		bodyHTML.WriteString(fmt.Sprintf(
+			`<a style="color:red" href="/category/%s">Add This Category</a>`, categoryName))
 	}
+
+	// Build final page
 	return &Page{
 		NavTitle:   config.SiteTitle,
 		ThemeColor: template.HTML(arcWikiLogo()),
-		CTitle:     removeUnderscores(title + ":" + categoryName),
-		Title:      title + ":" + categoryName,
-		Body:       template.HTML(subcategories + categories),
-		Size:       template.HTML(size), // Set Size to the number of matching pages
-		Menu:       template.HTML(safeMenu),
+		CTitle:     "Category:" + removeUnderscores(categoryName), // Displayed title
+		Title:      categoryName,                                  // For URLs and internal logic
+		Body:       template.HTML(bodyHTML.String()),
+		Size:       template.HTML(size),
+		Menu:       safeMenu,
 	}, nil
 }
 

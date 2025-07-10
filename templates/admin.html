@@ -1,0 +1,80 @@
+{{ template "header" . }}
+{{ template "navbar" . }}
+
+<div class="container-fluid py-4">
+  <div class="row gx-2">
+
+    <!-- Sidebar Navigation -->
+    <div class="col-1 d-none d-sm-block" style="width: fit-content;">
+      <h5 style="text-align:left; color:#222; font-size:91%; font-weight:normal; margin-bottom:0.3em;">
+        Navigation
+      </h5>
+      <div class="menu border-1">
+        <ul>
+          {{ .Menu }}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Main Content Column -->
+    <div class="col">
+      <div class="p-4 border rounded bg-white shadow-sm">
+
+        <!-- Admin Title and Buttons -->
+        <div class="text-center mb-4">
+          <h1 class="pageTitle mb-3">{{ .CTitle }}</h1>
+          <div class="btn-group" role="group">
+            <a class="btn btn-outline-secondary btn-sm" href="/add">Add Page</a>
+            <a class="btn btn-outline-secondary btn-sm" href="/admin/page">Manage Pages</a>
+            <a class="btn btn-outline-secondary btn-sm" href="/admin/category">Manage Categories</a>
+            <a class="btn btn-outline-secondary btn-sm" href="/logout">Logout</a>
+          </div>
+        </div>
+
+        <!-- Body Content -->
+        <div class="contentbod mb-4">
+          {{ .Body }}
+        </div>
+
+        <!-- Category Links -->
+        {{ if .CategoryLink }}
+        <ul class="categoryMenu mb-4">
+          <a href="/title/Special:Categories" title="Special:Categories">
+            {{ if gt (len .CategoryLink) 1 }}Categories{{ else }}Category{{ end }}
+          </a>:
+          {{ range $links := .CategoryLink }}
+            <li><a href="/title/Category:{{ $links }}">{{ $links }}</a></li>
+          {{ end }}
+        </ul>
+        {{ end }}
+
+        <!-- Markdown Cheatsheet -->
+        <div class="p-3 bg-light rounded border mt-4 shadow-sm">
+          <h5 class="mb-3 text-primary">📝 Markdown Cheatsheet</h5>
+          <div class="markdown-cheatsheet">
+            <ul class="list-unstyled mb-0">
+              <li><code>#</code> Heading 1</li>
+              <li><code>##</code> Heading 2</li>
+              <li><code>**bold**</code></li>
+              <li><code>*italic*</code></li>
+              <li><code>[link](url)</code></li>
+              <li><code>![image](url)</code></li>
+              <li><code>- item</code> or <code>* item</code></li>
+              <li><code>1. item</code></li>
+              <li><code>`inline code`</code></li>
+              <li>
+<pre class="bg-dark text-light rounded p-2" style="font-size: 80%;">
+```code block```
+</pre>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{{ template "footer" . }}
