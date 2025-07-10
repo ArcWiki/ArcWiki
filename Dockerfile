@@ -9,7 +9,7 @@
 	COPY templates ./templates
 	COPY assets ./assets
 	COPY config ./config
-	COPY arcWiki.db manifest.json  ./
+	COPY manifest.json  ./
 	 
 	# Download and install the Go dependencies
 	##RUN go mod download
