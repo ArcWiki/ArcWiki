@@ -27,3 +27,4 @@ go.work.sum
 gowiki.code-workspace
 wiki.backup
 .env
+.db

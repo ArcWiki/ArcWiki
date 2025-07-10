@@ -38,122 +38,94 @@ import (
 const Desktop = "desktop"
 const Mobile = "mobile"
 
+// var validPath = regexp.MustCompile("^/(?:(add|addpage|cat|edit|save|title|Category|Special)/([a-zA-Z0-9]+)|)")
+// var validPath = regexp.MustCompile("^/(?:(add|addpage|cat|edit|save|title|Category|Special)/([a-zA-Z0-9_-]+)|)")
+var validPath = regexp.MustCompile("^/(?:(search|results|admin|add|addpage|edit|delete|savecat|save|title|login|Category|Special)/([a-zA-Z0-9'_-]+)|)")
+
 func viewHandler(w http.ResponseWriter, r *http.Request, title string, userAgent string) {
-	//.stats.getStats()
-	//category := r.URL.Path[len("/title/"):]
-	if len(r.URL.Path) >= len("/title/") && r.URL.Path[:len("/title/")] == "/title/" {
-		// Path starts with "/title/" and has enough characters for slicing
-		category := r.URL.Path[len("/title/"):]
-
-		// Process the extracted category
-
-		switch {
-		//Uses the prefix Help: making navigating to Help easier
-		case strings.HasPrefix(category, "Help:"):
-			specialPageName := strings.TrimPrefix(category, "Help:")
-			specialPageName = strings.TrimSpace(specialPageName)
-			log.Info("Help page accessed:", specialPageName)
-
-			p, err := loadPage("Help-"+specialPageName, userAgent)
-			if err != nil {
-				log.Error("Error Occurred in:", specialPageName)
-
-				http.Redirect(w, r, "/", http.StatusFound)
-				return
-			}
-			renderTemplate(w, "title", p)
-			//Gets a list of pages and Random lands on one
-		case strings.HasPrefix(category, "Special:Random"):
-			log.Info("Random page accessed:", category)
-			db, err := db.LoadDatabase()
-			if err != nil {
-				log.Error("Error Loading Database:", err)
-
-			}
-			defer db.Close()
-
-			// Fetch a random page title from the Pages table
-			// Fetch a random page title from the Pages table securely
-			var title string
-			stmt, err := db.Prepare("SELECT title FROM Pages ORDER BY RANDOM() LIMIT 1")
-			if err != nil {
-
-				log.Error("Error preparing statement:", err)
-				return
-			}
-			defer stmt.Close() // Close the statement after use
-
-			row := stmt.QueryRow()
-			err = row.Scan(&title)
-			if err != nil {
-
-				log.Info("No pages found in database")
-
-				return
-			}
-
-			// Use the retrieved title securely
-			log.Info("Random Page Title:", title) // Or use the title for your purpose
-
-			http.Redirect(w, r, "/title/"+title, http.StatusFound) // Redirect to the randomly selected page
-
-			// Assuming you have a renderTemplate function for rendering the Page struct
-			//renderTemplate(w, "page", page, safeMenu)
-		// Allows getting to Special pages which are basically functional pages
-		case strings.HasPrefix(category, "Special:"):
-			specialPageName := strings.TrimPrefix(category, "Special:")
-			specialPageName = strings.TrimSpace(specialPageName)
-			log.Info("Special page accessed:", specialPageName)
-
-			p, err := loadPageSpecial(specialPageName, userAgent)
-			if err != nil {
-				log.Error("Error Occurred in:", err)
-
-				//fmt.Println("Error Occurred in:", specialPageName)
-				//http.Redirect(w, r, "/edit/"+title, http.StatusFound)
-
-			}
-			renderTemplate(w, "title", p)
-		//possibly for Editing Categories forgotten
-		case strings.Contains(category, ":"):
-			categoryParts := strings.Split(category, ":")
-			categoryName := strings.TrimSpace(categoryParts[1])
-			log.Debug("Category: ", categoryName)
-			p, err := loadPageCategory(title, categoryName, userAgent)
-			if err != nil {
-				log.Error("Error Occurred in:", err)
-
-				//http.Redirect(w, r, "/edit/"+title, http.StatusFound)
-				return
-			}
-			renderTemplate(w, "title", p)
-		// Normal View Normal View Normal View
-		default:
-			log.Info("Showing Page: ", title)
-
-			// Load the page for standard title viewing
-			p, err := loadPage(title, userAgent)
-			if err != nil {
-				log.Error("viewHandler: Something weird happened")
-				http.Redirect(w, r, "/title/Main_Page", http.StatusFound)
-				return
-			}
-
-			renderTemplate(w, "title", p)
-
-		}
-	} else {
-		//fmt.Println("hello beautiful world")
-		// Load the page for standard title viewing
-		p, err := loadPage("Main_Page", userAgent)
-		if err != nil {
-			log.Error("viewHandler: Something weird happened")
-			http.Redirect(w, r, "/title/Main_Page", http.StatusFound)
-			return
-		}
-		renderTemplate(w, "title", p)
+	category := ""
+	if strings.HasPrefix(r.URL.Path, "/title/") {
+		category = strings.TrimPrefix(r.URL.Path, "/title/")
 	}
+	log.WithFields(log.Fields{"title": title, "category": category}).Debug("ViewHandler called")
 
+	switch {
+	case category == "":
+		log.Info("No title/category given. Falling back to Main_Page.")
+		renderOrRedirect(w, r, "Main_Page", userAgent)
+	case strings.HasPrefix(category, "Help:"):
+		handleHelpPage(w, r, category, userAgent)
+	case strings.HasPrefix(category, "Special:Random"):
+		handleRandomPage(w, r)
+	case strings.HasPrefix(category, "Special:"):
+		handleSpecialPage(w, r, category, userAgent)
+	case strings.Contains(category, ":"):
+		handleCategoryPage(w, r, title, category, userAgent)
+	default:
+		renderOrRedirect(w, r, title, userAgent)
+	}
+}
+
+func handleHelpPage(w http.ResponseWriter, r *http.Request, category, userAgent string) {
+	specialPageName := strings.TrimSpace(strings.TrimPrefix(category, "Help:"))
+	p, err := loadPage("Help-"+specialPageName, userAgent)
+	if err != nil {
+		log.WithError(err).WithField("page", specialPageName).Error("Help page not found")
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+	renderTemplate(w, "title", p)
+}
+func handleRandomPage(w http.ResponseWriter, r *http.Request) {
+	db, err := db.LoadDatabase()
+	if err != nil {
+		log.WithError(err).Error("Failed to load DB for random page")
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+	defer db.Close()
+
+	var title string
+	if err := db.QueryRow("SELECT title FROM Pages ORDER BY RANDOM() LIMIT 1").Scan(&title); err != nil {
+		log.Warn("No pages found for random redirect")
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+	http.Redirect(w, r, "/title/"+title, http.StatusFound)
+}
+func handleSpecialPage(w http.ResponseWriter, r *http.Request, category, userAgent string) {
+	specialPageName := strings.TrimSpace(strings.TrimPrefix(category, "Special:"))
+	p, err := loadPageSpecial(specialPageName, userAgent)
+	if err != nil {
+		log.WithError(err).WithField("page", specialPageName).Error("Special page error")
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+	renderTemplate(w, "title", p)
+}
+func handleCategoryPage(w http.ResponseWriter, r *http.Request, title, category, userAgent string) {
+	parts := strings.SplitN(category, ":", 2)
+	if len(parts) < 2 {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+	categoryName := strings.TrimSpace(parts[1])
+	p, err := loadPageCategory(title, categoryName, userAgent)
+	if err != nil {
+		log.WithError(err).WithField("category", categoryName).Error("Failed to load category")
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+	renderTemplate(w, "title", p)
+}
+func renderOrRedirect(w http.ResponseWriter, r *http.Request, title, userAgent string) {
+	p, err := loadPage(title, userAgent)
+	if err != nil {
+		log.WithField("title", title).Error("Falling back to Main_Page")
+		http.Redirect(w, r, "/title/Main_Page", http.StatusFound)
+		return
+	}
+	renderTemplate(w, "title", p)
 }
 
 // Edit Handler with a switch for editing Categories
@@ -224,42 +196,38 @@ func saveCatHandler(w http.ResponseWriter, r *http.Request, title string, userAg
 	http.Redirect(w, r, "/title/Special:Categories", http.StatusFound)
 }
 
-// var validPath = regexp.MustCompile("^/(?:(add|addpage|cat|edit|save|title|Category|Special)/([a-zA-Z0-9]+)|)")
-// var validPath = regexp.MustCompile("^/(?:(add|addpage|cat|edit|save|title|Category|Special)/([a-zA-Z0-9_-]+)|)")
-var validPath = regexp.MustCompile("^/(?:(search|results|admin|add|addpage|edit|delete|savecat|save|title|login|Category|Special)/([a-zA-Z0-9'_-]+)|)")
-
-//var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
+// main.go
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request, string, string)) http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		//requestHeaders := r.Header
 		detect := mobiledetect.New(r, nil)
-		userAgent := ""
+		userAgent := Desktop
 		if detect.IsMobile() || detect.IsTablet() {
-			//log.Debug("Responsive Mode Activated")
 			userAgent = Mobile
-		} else {
-			userAgent = Desktop
-			//log.Debug("Desktop Detected")
 		}
 
-		//userAgent := requestHeaders.Get("User-Agent")
-		//fmt.Println("passing through")
-
 		m := validPath.FindStringSubmatch(r.URL.Path)
-
 		if m == nil {
 			http.NotFound(w, r)
-			log.Error("Handler Error")
+			log.WithField("path", r.URL.Path).Error("Handler Error: path did not match validPath regex")
 			return
 		}
 
-		fn(w, r, m[2], userAgent)
-		//handleSSEUpdates(w, r)
+		// ✅ Safely extract title
+		title := ""
+		if len(m) > 2 {
+			title = m[2]
+		}
+
+		// ✅ Log what was matched
+		log.Infof("makeHandler matched path '%s' with title='%s'", r.URL.Path, title)
+
+		// ✅ Call the actual handler
+		fn(w, r, title, userAgent)
 	}
 }
+
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract the resource type and title using strings.SplitN
 
